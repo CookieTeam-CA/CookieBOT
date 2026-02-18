@@ -1,0 +1,12 @@
+.venv
+uv.lock
+.DS_Store
+.idea
+.env
+template/config.cfg
+logs
+data
+config.cfg
+cogs/*
+!cogs/*.py
+/__pycache__
