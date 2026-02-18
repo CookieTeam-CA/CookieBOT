@@ -3,7 +3,7 @@ uv.lock
 .DS_Store
 .idea
 .env
-template/config.cfg
+config.cfg
 logs
 data
 config.cfg

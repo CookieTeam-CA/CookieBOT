@@ -13,9 +13,9 @@ class GuessNumber(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.db = "data/database.db"
-        self.de = ZoneInfo('Europe/Berlin')
+        self.de = ZoneInfo("Europe/Berlin")
         self.parser = configparser.ConfigParser()
-        self.parser.read('config.cfg')
+        self.parser.read("config.cfg")
         self.channel = int(self.parser["CHANNELS"]["guess_number_channel"])
         self.number = None
         self.number1 = None
@@ -38,7 +38,8 @@ class GuessNumber(commands.Cog):
 
         embed = discord.Embed(
             title="Guess the Number",
-            description=f"Die Zahl die zu erraten ist befindet sich **zwischen {self.number1} und {self.number2}**.\n Die Schwierigkeit ist **{difficulty}**.",
+            description=f"Die Zahl die zu erraten ist befindet sich **zwischen {self.number1} und {self.number2}**.\n "
+            f"Die Schwierigkeit ist **{difficulty}**.",
             color=color,
             timestamp=datetime.now(tz=self.de),
         )
@@ -50,7 +51,6 @@ class GuessNumber(commands.Cog):
                 await message.delete()
 
         logging.info(f"Guess Number was sent, the number is {self.number}.")
-
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -76,22 +76,36 @@ class GuessNumber(commands.Cog):
             return
 
         async with aiosqlite.connect(self.db) as db:
-            await db.execute("INSERT OR IGNORE INTO gtn_stats (user_id) VALUES (?)", (message.author.id,))
-            await db.execute("UPDATE gtn_stats SET guess = guess + 1 WHERE user_id = ?", (message.author.id,))
+            await db.execute(
+                "INSERT OR IGNORE INTO gtn_stats (user_id) VALUES (?)",
+                (message.author.id,),
+            )
+            await db.execute(
+                "UPDATE gtn_stats SET guess = guess + 1 WHERE user_id = ?",
+                (message.author.id,),
+            )
             await db.commit()
 
         if guess == self.number:
             async with aiosqlite.connect(self.db) as db:
-                await db.execute("UPDATE gtn_stats SET wins = wins + 1 WHERE user_id = ?", (message.author.id,))
+                await db.execute(
+                    "UPDATE gtn_stats SET wins = wins + 1 WHERE user_id = ?",
+                    (message.author.id,),
+                )
                 await db.commit()
 
-            async with aiosqlite.connect(self.db) as db:
-                async with db.execute("SELECT wins, guess FROM gtn_stats WHERE user_id = ?", (message.author.id,)) as cursor:
-                    result = await cursor.fetchone()
-                    print(f"{result[0]} / {result[1]}")
-                    wins = result[0] + 1
-                    guesses = result[1]
-                    winrate = (wins / guesses) * 100 if guesses > 0 else 0
+            async with (
+                aiosqlite.connect(self.db) as db,
+                db.execute(
+                    "SELECT wins, guess FROM gtn_stats WHERE user_id = ?",
+                    (message.author.id,),
+                ) as cursor,
+            ):
+                result = await cursor.fetchone()
+                print(f"{result[0]} / {result[1]}")
+                wins = result[0] + 1
+                guesses = result[1]
+                winrate = (wins / guesses) * 100 if guesses > 0 else 0
 
             embed = discord.Embed(
                 title="RICHTIG!",
@@ -108,7 +122,7 @@ class GuessNumber(commands.Cog):
             # jetzt noch kekse geben
         else:
             await message.add_reaction("❌")
-            chance = random.randint(1 ,5)
+            chance = random.randint(1, 5)
             if chance == 1:
                 if self.number1 <= guess <= self.number2:
                     if guess > self.number:
@@ -116,7 +130,11 @@ class GuessNumber(commands.Cog):
                     else:
                         await message.reply("Die gesuchte Zahl ist größer.", mention_author=False)
                 else:
-                    await message.reply(f"Deine Zahl liegt nicht in der angegebenen Zahlen spanne. Die gesuchte Zahl liegt zwischen **{self.number1} und {self.number2}**.", mention_author=False)
+                    await message.reply(
+                        f"Deine Zahl liegt nicht in der angegebenen Zahlen spanne. "
+                        f"Die gesuchte Zahl liegt zwischen **{self.number1} und {self.number2}**.",
+                        mention_author=False,
+                    )
 
 
 def setup(bot):

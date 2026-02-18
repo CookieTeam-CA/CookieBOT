@@ -10,31 +10,24 @@ import ezcord
 from dotenv import load_dotenv
 from ezcord import log
 
-from utils import greeter_builder
-
+from utils import greeter_builder, safe_add_role, safe_embed_channel_send
 
 os.makedirs("logs", exist_ok=True)
 
-file_handler = RotatingFileHandler(
-    filename="logs/bot.log", maxBytes=2 * 1024 * 1024, backupCount=10, encoding="utf-8"
-)
+file_handler = RotatingFileHandler(filename="logs/bot.log", maxBytes=2 * 1024 * 1024, backupCount=10, encoding="utf-8")
 
-file_handler.setFormatter(
-    logging.Formatter("%(asctime)s | %(levelname)-8s | %(name)s | %(message)s")
-)
+file_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"))
 
 logger = ezcord.logs.set_log(
     log_level=logging.DEBUG,
-    console=True,
+    console=False,
     log_format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
 logger.addHandler(file_handler)
 
 
-bot = ezcord.Bot(
-    intents=discord.Intents.all(), debug_guilds=None, ready_event=None, language="de"
-)
+bot = ezcord.Bot(intents=discord.Intents.all(), debug_guilds=None, ready_event=None, language="de")
 bot.add_help_command()
 
 CONFIG_PATH = "config.cfg"
@@ -46,11 +39,15 @@ if not os.path.exists(CONFIG_PATH):
 parser = configparser.ConfigParser()
 parser.read(CONFIG_PATH)
 
-guild_id = int(parser["GENERAL"]["guild_id"])
-log_channel = int(parser["CHANNELS"]["log_channel"])
-im_log_channel = int(parser["CHANNELS"]["im_log_channel"])
-welcome_channel = int(parser["CHANNELS"]["welcome_channel"])
-member_role = int(parser["WELCOME"]["member_role"])
+try:
+    guild_id = int(parser["GENERAL"]["guild_id"])
+    log_channel = int(parser["CHANNELS"]["log_channel"])
+    im_log_channel = int(parser["CHANNELS"]["im_log_channel"])
+    welcome_channel = int(parser["CHANNELS"]["welcome_channel"])
+    member_role = int(parser["WELCOME"]["member_role"])
+except (KeyError, ValueError) as e:
+    log.critical(f"Error reading config.cfg: {e}. Check if all IDs are integers.")
+    sys.exit(1)
 
 
 @bot.event
@@ -69,21 +66,29 @@ async def on_member_join(member):
                 color=discord.Color.green(),
                 member=member,
             )
-            await bot.get_channel(im_log_channel).send(embed=embed)
+            await safe_embed_channel_send(bot, im_log_channel, embed)
             return
 
-        file = discord.File("img/join.gif", filename="join.gif")
+        gif_path = "img/join.gif"
+        file = None
+        image_payload = None
+
+        if os.path.exists(gif_path):
+            file = discord.File(gif_path, filename="join.gif")
+            image_payload = "join"
+        else:
+            log.warning(f"File {gif_path} missing. Sending without image.")
 
         embed = greeter_builder(
             title=":wave: Hallo! Cool, dass du hierhergefunden hast!",
             description=f"Hallo {member.mention}, wir hoffen, dass du viel Spaß auf diesem Server haben wirst.",
             color=discord.Color.orange(),
             member=member,
-            image="join",
+            image=image_payload,
         )
-        await bot.get_channel(welcome_channel).send(embed=embed, file=file)
-        role = discord.utils.get(member.guild.roles, id=member_role)
-        await member.add_roles(role)
+
+        await safe_embed_channel_send(bot, welcome_channel, embed, file)
+        await safe_add_role(member, member_role)
     else:
         log.warning(f"{member} joined a Server that wasn't configured")
 
@@ -99,18 +104,27 @@ async def on_member_remove(member):
                 color=discord.Color.red(),
                 member=member,
             )
-            await bot.get_channel(im_log_channel).send(embed=embed)
+            await safe_embed_channel_send(bot, im_log_channel, embed)
             return
-        file = discord.File("img/leave.gif", filename="leave.gif")
+
+        gif_path = "img/leave.gif"
+        file = None
+        image_payload = None
+
+        if os.path.exists(gif_path):
+            file = discord.File(gif_path, filename="leave.gif")
+            image_payload = "leave"
+        else:
+            log.warning(f"File {gif_path} missing. Sending without image.")
 
         embed = greeter_builder(
             title=":wave: Tschüss! Er war noch viel zu jung, um zu sterben.",
             description=f"Tschüss, {member.mention}! Hoffentlich kommst du bald zurück!",
             color=discord.Color.red(),
             member=member,
-            image="leave",
+            image=image_payload,
         )
-        await bot.get_channel(welcome_channel).send(embed=embed, file=file)
+        await safe_embed_channel_send(bot, welcome_channel, embed, file)
     else:
         log.warning(f"{member} left from a Server that wasn't configured")
 
