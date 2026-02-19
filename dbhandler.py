@@ -31,6 +31,30 @@ class UserDB(ezcord.DBHandler):
         words STRING DEFAULT NULL,
         last_author_id INTEGER DEFAULT NULL,
         done BOOLEAN DEFAULT FALSE)""")
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS flag_stats (
+        user_id INTEGER PRIMARY KEY,
+        wins INTEGER DEFAULT 0,
+        guesses INTEGER DEFAULT 0,
+        streak INTEGER DEFAULT 0)""")
+
+    async def update_flag_stats(self, user_id, win=True):
+        if win:
+            await self.exec(
+                "UPDATE flag_stats SET wins = wins + 1, guesses = guesses + 1, streak = streak + 1 WHERE user_id = ?",
+                (user_id,),
+            )
+        else:
+            await self.exec("UPDATE flag_stats SET guesses = guesses + 1, streak = 0 WHERE user_id = ?", (user_id,))
+
+    async def insert_user(self, table, id_key, user_id):
+        await self.exec(f"INSERT OR IGNORE INTO {table} ({id_key}) VALUES (?)", (user_id,))
+
+    async def add_smth(self, table, key, amount, id_key, user_id):
+        await self.exec(f"UPDATE {table} SET {key} = {key} + {amount} WHERE {id_key} = ?", (user_id,))
+
+    async def set_smth(self, table, key, amount, id_key, user_id):
+        await self.exec(f"UPDATE {table} SET {key} = {amount} WHERE {id_key} = ?", (user_id,))
 
     async def update_one_word(self, words_json, author_id, game_id, done):
         await self.exec(

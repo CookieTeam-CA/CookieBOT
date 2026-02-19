@@ -1,5 +1,4 @@
 import configparser
-import logging
 import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -7,6 +6,7 @@ from zoneinfo import ZoneInfo
 import aiosqlite
 import discord
 from discord.ext import commands
+from ezcord import log
 
 
 class GuessNumber(commands.Cog):
@@ -16,7 +16,12 @@ class GuessNumber(commands.Cog):
         self.de = ZoneInfo("Europe/Berlin")
         self.parser = configparser.ConfigParser()
         self.parser.read("config.cfg")
-        self.channel = int(self.parser["CHANNELS"]["guess_number_channel"])
+        try:
+            self.channel = int(self.parser["CHANNELS"]["guess_number_channel"])
+        except (KeyError, ValueError):
+            log.error("GuessNumberChannel ID not found in config.cfg!")
+            self.channel = None
+
         self.number = None
         self.number1 = None
         self.number2 = None
@@ -50,11 +55,11 @@ class GuessNumber(commands.Cog):
             if message.type == discord.MessageType.pins_add:
                 await message.delete()
 
-        logging.info(f"Guess Number was sent, the number is {self.number}.")
+        log.info(f"Guess Number was sent, the number is {self.number}.")
 
     @commands.Cog.listener()
     async def on_ready(self):
-        logging.info("guess_number.py is ready")
+        log.info("guess_number.py is ready")
         await self.new_game()
 
     @commands.Cog.listener()
@@ -112,7 +117,7 @@ class GuessNumber(commands.Cog):
             await message.add_reaction("✅")
             await discord.Message.unpin(self.last_game_message, reason="Guess the Number Game")
             await self.new_game()
-            logging.info(f"{message.author} wrote the correct number {self.number}")
+            log.info(f"{message.author} wrote the correct number {self.number}")
             # jetzt noch kekse geben
         else:
             await message.add_reaction("❌")

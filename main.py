@@ -3,11 +3,11 @@ import logging
 import os
 import shutil
 import sys
-import yaml
 from logging.handlers import RotatingFileHandler
 
 import discord
 import ezcord
+import yaml
 from dotenv import load_dotenv
 from ezcord import log
 
@@ -26,7 +26,7 @@ file_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(f
 
 logger = ezcord.logs.set_log(
     log_level=logging.DEBUG,
-    console=False,
+    console=True,
     log_format="%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
 )
 
@@ -135,11 +135,13 @@ async def on_member_remove(member):
     else:
         log.warning(f"{member} left from a Server that wasn't configured")
 
+
 with open("data/commands.yml", encoding="utf-8") as file:
     cmd_locales = yaml.safe_load(file)
 
 if __name__ == "__main__":
     load_dotenv()
+    bot.load_extension("cogs.flagguess")
     bot.load_extension("cogs.guess_number")
     bot.load_extension("cogs.one_word")
     # bot.load_extension("cogs.memes")

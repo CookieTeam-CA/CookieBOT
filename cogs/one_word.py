@@ -2,11 +2,9 @@ import asyncio
 import configparser
 import json
 import time
-from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import discord
-import ezcord
 from discord.ext import commands
 from ezcord import log
 from ezcord.internal.dc import slash_command
@@ -26,8 +24,8 @@ class ButtonPaginator(discord.ui.View):
         await interaction.response.edit_message(embed=self.pages[self.current_page], view=self)
 
     def update_buttons(self):
-        self.prev_button.disabled = (self.current_page == 0)
-        self.next_button.disabled = (self.current_page == len(self.pages) - 1)
+        self.prev_button.disabled = self.current_page == 0
+        self.next_button.disabled = self.current_page == len(self.pages) - 1
 
     @discord.ui.button(label="◀", style=discord.ButtonStyle.gray)
     async def prev_button(self, button: discord.ui.Button, interaction: discord.Interaction):
@@ -46,11 +44,14 @@ class OneWordChallenge(commands.Cog):
         self.de = ZoneInfo("Europe/Berlin")
         self.parser = configparser.ConfigParser()
         self.parser.read("config.cfg")
-        self.channel = int(self.parser["CHANNELS"]["one_word"])
+        try:
+            self.channel = int(self.parser["CHANNELS"]["one_word"])
+        except (KeyError, ValueError):
+            log.error("OneWord ID not found in config.cfg!")
+            self.channel = None
         self.id = None
         self.words = []
         self.last_author = None
-
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -71,7 +72,6 @@ class OneWordChallenge(commands.Cog):
             log.debug("one_word no active game found.")
 
         log.info("one_word.py is ready")
-
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -105,9 +105,7 @@ class OneWordChallenge(commands.Cog):
 
             if content.endswith((".", "?", "!")):
                 embed = discord.Embed(
-                    title="Der Fertige Satz ist:",
-                    description=(" ".join(self.words)),
-                    color=discord.Color.random()
+                    title="Der Fertige Satz ist:", description=(" ".join(self.words)), color=discord.Color.random()
                 )
                 embed.set_footer(text="Nutze /one_word_list um vorherige Sätze anzuschauen!")
                 await message.channel.send(embed=embed)
@@ -120,9 +118,9 @@ class OneWordChallenge(commands.Cog):
             await asyncio.sleep(5)
             await utils.safe_delete(msg)
 
-
     @slash_command()
     async def one_word_list(self, ctx):
+        log.debug(f"{ctx.author.name} used /one_word_list")
         await ctx.defer()
         data = await dbhandler.db.get_finished_games()
 
@@ -132,13 +130,10 @@ class OneWordChallenge(commands.Cog):
 
         embeds = []
         chunk_size = 5
-        chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
+        chunks = [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
 
         for i, chunk in enumerate(chunks):
-            embed = discord.Embed(
-                title="📚 One Word Verlauf",
-                color=discord.Color.blue()
-            )
+            embed = discord.Embed(title="📚 One Word Verlauf", color=discord.Color.blue())
             embed.set_footer(text=f"Seite {i + 1} von {len(chunks)}")
 
             for row in chunk:
@@ -151,9 +146,7 @@ class OneWordChallenge(commands.Cog):
                     sentence = "*Fehler beim Laden*"
 
                 embed.add_field(
-                    name=f"Satz #{game_id}",
-                    value=f"💬 {sentence}\n🏁 Beendet von: <@{last_author_id}>",
-                    inline=False
+                    name=f"Satz #{game_id}", value=f"💬 {sentence}\n🏁 Beendet von: <@{last_author_id}>", inline=False
                 )
 
             embeds.append(embed)
