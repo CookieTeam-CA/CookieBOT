@@ -1,12 +1,15 @@
 import configparser
 import random
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import aiosqlite
 import discord
 from discord.ext import commands
 from ezcord import log
+
+import dbhandler
+import utils
 
 
 class GuessNumber(commands.Cog):
@@ -22,11 +25,11 @@ class GuessNumber(commands.Cog):
             log.error("GuessNumberChannel ID not found in config.cfg!")
             self.channel = None
 
+        self.id = None
         self.number = None
         self.number1 = None
         self.number2 = None
         self.last_game_message = None
-        # maybe noch in datenbank diese daten speichern damit auch nach restart das game noch gleich ist
 
     async def new_game(self):
         difficulties = {
@@ -37,6 +40,7 @@ class GuessNumber(commands.Cog):
         difficulty = random.choice(list(difficulties.keys()))
         (one1, two1, one2, two2, color) = difficulties[difficulty]
 
+        self.id = int(time.time() * 1000)
         self.number1 = random.randint(one1, two1)
         self.number2 = random.randint(one2, two2)
         self.number = random.randint(self.number1, self.number2)
@@ -48,19 +52,34 @@ class GuessNumber(commands.Cog):
             color=color,
             timestamp=datetime.now(tz=self.de),
         )
-        self.last_game_message = await self.bot.get_channel(self.channel).send(embed=embed)
+        self.last_game_message = await utils.safe_embed_channel_send(self.bot, self.channel, embed=embed)
+
         await discord.Message.pin(self.last_game_message, reason="Guess the Number Game")
+        self.last_game_message = self.last_game_message.id
+
+        await dbhandler.db.new_gtn_game(self.id, self.number1, self.number2, self.number, self.last_game_message)
 
         async for message in self.bot.get_channel(self.channel).history(limit=1):
             if message.type == discord.MessageType.pins_add:
-                await message.delete()
+                await utils.safe_delete(message)
 
         log.info(f"Guess Number was sent, the number is {self.number}.")
 
     @commands.Cog.listener()
     async def on_ready(self):
+        last_game_row = await dbhandler.db.get_latest_row("gtn_save", "id")
+
+        if last_game_row is None or last_game_row[5] == 1:
+            await self.new_game()
+            log.debug("gtn started new game")
+        else:
+            self.id = last_game_row[0]
+            self.number1 = last_game_row[1]
+            self.number2 = last_game_row[2]
+            self.number = last_game_row[3]
+            self.last_game_message = last_game_row[4]
+            log.debug(f"gtn restored last game with the number {self.number}")
         log.info("guess_number.py is ready")
-        await self.new_game()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -74,48 +93,29 @@ class GuessNumber(commands.Cog):
         except ValueError:
             return
 
-        async with aiosqlite.connect(self.db) as db:
-            await db.execute(
-                "INSERT OR IGNORE INTO gtn_stats (user_id) VALUES (?)",
-                (message.author.id,),
-            )
-            await db.execute(
-                "UPDATE gtn_stats SET guess = guess + 1 WHERE user_id = ?",
-                (message.author.id,),
-            )
-            await db.commit()
+        await dbhandler.db.add_smth_and_insert("gtn_stats", "user_id", message.author.id, "guess", 1)
 
         if guess == self.number:
-            async with aiosqlite.connect(self.db) as db:
-                await db.execute(
-                    "UPDATE gtn_stats SET wins = wins + 1 WHERE user_id = ?",
-                    (message.author.id,),
-                )
-                await db.commit()
+            await dbhandler.db.add_smth("gtn_stats", "wins", 1, "user_id", message.author.id)
 
-            async with (
-                aiosqlite.connect(self.db) as db,
-                db.execute(
-                    "SELECT wins, guess FROM gtn_stats WHERE user_id = ?",
-                    (message.author.id,),
-                ) as cursor,
-            ):
-                result = await cursor.fetchone()
-                print(f"{result[0]} / {result[1]}")
-                wins = result[0] + 1
-                guesses = result[1]
-                winrate = (wins / guesses) * 100 if guesses > 0 else 0
+            result = await dbhandler.db.get_one_row("gtn_stats", "user_id", message.author.id)
+            wins = result[1]
+            guesses = result[2]
+            winrate = round((wins / guesses) * 100 if guesses > 0 else 0)
 
             embed = discord.Embed(
                 title="RICHTIG!",
-                description=f"{message.author.mention} hat die Zahl **{self.number}** geschrieben und lag richtig.",
+                description=f"{message.author.mention} hat die Zahl **{self.number}** erraten.",
                 color=discord.Color.green(),
-                timestamp=datetime.now(tz=self.de),
             )
-            embed.set_footer(text=f"{message.author.display_name} hat eine Gewinnchance von {round(winrate, 2)}%.")
-            await self.bot.get_channel(self.channel).send(embed=embed)
+            embed.set_footer(text=f"Du hast eine Gewinnchance von {round(winrate, 2)}%.")
+            await utils.safe_embed_channel_send(self.bot, self.channel, embed=embed)
+            await dbhandler.db.set_smth("gtn_save", "done", 1, "id", self.id)
+
+            if self.last_game_message:
+                await utils.safe_unpin(self.last_game_message, message.channel)
+
             await message.add_reaction("✅")
-            await discord.Message.unpin(self.last_game_message, reason="Guess the Number Game")
             await self.new_game()
             log.info(f"{message.author} wrote the correct number {self.number}")
             # jetzt noch kekse geben

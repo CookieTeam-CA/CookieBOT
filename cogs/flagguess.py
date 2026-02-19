@@ -227,11 +227,11 @@ class FlagGuessingCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        log.info("flagguess.py is ready")
         await self.start_new_game()
+        log.info("flagguess.py is ready")
 
     async def start_new_game(self):
-        await asyncio.sleep(1)  # war auf 15s
+        await asyncio.sleep(10)
         self.cooldown = False
         self.current_flag = random.choice(list(self.flag_dict.keys()))
         log.debug(f"the flag is {self.current_flag}")
@@ -254,8 +254,7 @@ class FlagGuessingCog(commands.Cog):
                 result = await dbhandler.db.get_one_row("flag_stats", "user_id", message.author.id)
                 embed = discord.Embed(
                     title="Richtig!",
-                    description=f"**{message.author.display_name}** hat die Flagge **{message.content}** richtig "
-                                f"erraten.",
+                    description=f"**{message.author.mention}** hat die Flagge **{message.content}** richtig erraten.",
                     color=discord.Color.green(),
                 )
 

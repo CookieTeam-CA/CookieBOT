@@ -45,14 +45,23 @@ async def safe_embed_channel_send(bot, channel, embed=None, file=None):
 
     if channel:
         try:
-            await channel.send(embed=embed, file=file)
+            return await channel.send(embed=embed, file=file)
         except discord.HTTPException as e:
             log.error(f"Failed to send message to {channel.name}: {e}")
     else:
         log.error(f"Channel ID {channel} not found.")
+    return None
 
 
 async def safe_delete(message):
-    """Hilfsfunktion um Nachrichten sicher zu löschen, auch wenn sie schon weg sind."""
+    """Function to delete a message with error handler if the message doesn't exist for example"""
     with suppress(discord.HTTPException, discord.NotFound, discord.Forbidden):
         await message.delete()
+
+async def safe_unpin(message_id, channel):
+    """Function to unpin a message with error handler if the message doesn't exist for example"""
+    if not message_id or not channel:
+        return
+    with suppress(discord.HTTPException, discord.NotFound):
+        msg = await channel.fetch_message(message_id)
+        await msg.unpin()

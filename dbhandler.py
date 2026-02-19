@@ -26,6 +26,14 @@ class UserDB(ezcord.DBHandler):
         wins INTEGER DEFAULT 0,
         guess INTEGER DEFAULT 0)""")
         await self.exec("""
+        CREATE TABLE IF NOT EXISTS gtn_save (
+        id INTEGER PRIMARY KEY,
+        number1 INTEGER DEFAULT NULL,
+        number2 INTEGER DEFAULT NULL,
+        number INTEGER DEFAULT NULL,
+        last_game_message STRING DEFAULT NULL,
+        done BOOLEAN DEFAULT FALSE)""")
+        await self.exec("""
         CREATE TABLE IF NOT EXISTS one_word (
         id INTEGER PRIMARY KEY,
         words STRING DEFAULT NULL,
@@ -62,6 +70,9 @@ class UserDB(ezcord.DBHandler):
             (words_json, author_id, done, game_id),
         )
 
+    async def new_gtn_game(self, game_id, number1, number2, number, last_game_state):
+        await self.exec("INSERT INTO gtn_save (id, number1, number2, number, last_game_message) VALUES (?, ?, ?, ?, ?)", (game_id, number1, number2, number, last_game_state))
+
     async def get_latest_row(self, table, order_col):
         return await self.one(f"SELECT * FROM {table} ORDER BY {order_col} DESC LIMIT 1")
 
@@ -80,11 +91,11 @@ class UserDB(ezcord.DBHandler):
             "INSERT INTO one_word (id, words, last_author_id) VALUES (?, ?, ?)", (game_id, words_json, author_id)
         )
 
-    async def add_coins(self, user_id, amount):
+    async def add_smth_and_insert(self, table, id_key, user_id, key, amount):
         """Execute multiple queries in one connection."""
         async with self.start() as cursor:
-            await cursor.exec("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
-            await cursor.exec("UPDATE users SET coins = coins + ? WHERE user_id = ?", (amount, user_id))
+            await cursor.exec(f"INSERT OR IGNORE INTO {table} ({id_key}) VALUES (?)", (user_id,))
+            await cursor.exec(f"UPDATE {table} SET {key} = {key} + ? WHERE {id_key} = ?", (amount, user_id))
 
     async def get_users(self):
         """Return all result rows."""

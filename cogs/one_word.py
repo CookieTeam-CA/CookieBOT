@@ -59,6 +59,7 @@ class OneWordChallenge(commands.Cog):
 
         if last_game_state and last_game_state[3] == 0:
             self.id = last_game_state[0]
+            self.last_author = last_game_state[2]
 
             try:
                 self.words = json.loads(last_game_state[1]) if last_game_state[1] else []
@@ -66,7 +67,6 @@ class OneWordChallenge(commands.Cog):
                 log.warning("Game save couldn't load. Starting new.")
                 self.words = []
 
-            self.last_author = last_game_state[2]
             log.debug("one_word restored last game state")
         else:
             log.debug("one_word no active game found.")
