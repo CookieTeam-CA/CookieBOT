@@ -71,7 +71,10 @@ class UserDB(ezcord.DBHandler):
         )
 
     async def new_gtn_game(self, game_id, number1, number2, number, last_game_state):
-        await self.exec("INSERT INTO gtn_save (id, number1, number2, number, last_game_message) VALUES (?, ?, ?, ?, ?)", (game_id, number1, number2, number, last_game_state))
+        await self.exec(
+            "INSERT INTO gtn_save (id, number1, number2, number, last_game_message) VALUES (?, ?, ?, ?, ?)",
+            (game_id, number1, number2, number, last_game_state),
+        )
 
     async def get_latest_row(self, table, order_col):
         return await self.one(f"SELECT * FROM {table} ORDER BY {order_col} DESC LIMIT 1")

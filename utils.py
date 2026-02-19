@@ -58,6 +58,7 @@ async def safe_delete(message):
     with suppress(discord.HTTPException, discord.NotFound, discord.Forbidden):
         await message.delete()
 
+
 async def safe_unpin(message_id, channel):
     """Function to unpin a message with error handler if the message doesn't exist for example"""
     if not message_id or not channel:

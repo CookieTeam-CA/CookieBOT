@@ -15,7 +15,6 @@ import utils
 class GuessNumber(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = "data/database.db"
         self.de = ZoneInfo("Europe/Berlin")
         self.parser = configparser.ConfigParser()
         self.parser.read("config.cfg")

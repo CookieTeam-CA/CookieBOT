@@ -2,19 +2,35 @@ en-US:
   one_word_list:
     name: one_word_history
     description: Shows the final sentence history of One Word!
+  avatar:
+    name: avatar
+    description: Shows the Avatar from a User.
+  mc_skin:
+    name: mc_skin
+    description: Shows the Minecraft Skin from a Minecraft Player.
 
   cogs:
     OneWordChallenge:
       name: One Word
       description: These are the commands for the One Word game.
+    Utility:
+      description: Nützliche Tools & Informationsbefehle
 
 
 de:
   one_word_list:
     name: one_word_verlauf
     description: Zeigt den Verlauf der finalen Sätze von One Word an!
+  avatar:
+    name: profilbild
+    description: Zeigt das Profilbild von einem Nutzer.
+  mc_skin:
+    name: mc_skin
+    description: Zeigt den Minecraft Skin von einem Minecraft Spieler.
 
   cogs:
     OneWordChallenge:
       name: One Word
       description: Das sind die Befehle des One Words Spiels.
+    Utility:
+      description: Useful Tools & Information Commands

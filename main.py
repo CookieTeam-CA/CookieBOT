@@ -144,6 +144,7 @@ if __name__ == "__main__":
     bot.load_extension("cogs.flagguess")
     bot.load_extension("cogs.guess_number")
     bot.load_extension("cogs.one_word")
+    bot.load_extension("cogs.utility")
     # bot.load_extension("cogs.memes")
     # bot.load_extension("cogs.games")
     bot.localize_commands(cmd_locales)
