@@ -1,0 +1,74 @@
+import ezcord
+
+
+class UserDB(ezcord.DBHandler):
+    def __init__(self):
+        super().__init__("data/database.db")
+
+    async def setup(self):
+        """Creates Database Tables."""
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS memes (
+        user_id INTEGER DEFAULT NULL,
+        msg_id INTEGER PRIMARY KEY,
+        meme_url STRING DEFAULT NULL,
+        meme_txt STRING DEFAULT NULL,
+        votes INTEGER DEFAULT 0)""")
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS meme_votes (
+        msg_id INTEGER,
+        user_id INTEGER,
+        vote INTEGER CHECK(vote IN (-1, 1)),
+        PRIMARY KEY (msg_id, user_id))""")
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS gtn_stats (
+        user_id INTEGER PRIMARY KEY,
+        wins INTEGER DEFAULT 0,
+        guess INTEGER DEFAULT 0)""")
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS one_word (
+        id INTEGER PRIMARY KEY,
+        words STRING DEFAULT NULL,
+        last_author_id INTEGER DEFAULT NULL,
+        done BOOLEAN DEFAULT FALSE)""")
+
+    async def update_one_word(self, words_json, author_id, game_id, done):
+        await self.exec(
+            "UPDATE one_word SET words = ?, last_author_id = ?, done = ? WHERE id = ?",
+            (words_json, author_id, done, game_id),
+        )
+
+    async def get_latest_row(self, table, order_col):
+        return await self.one(f"SELECT * FROM {table} ORDER BY {order_col} DESC LIMIT 1")
+
+    async def get_rows(self, table, limit, order_col):
+        return await self.all(f"SELECT * FROM {table} ORDER BY {order_col} DESC LIMIT {limit}")
+
+    async def get_finished_games(self):
+        return await self.all("SELECT id, words, last_author_id FROM one_word WHERE done = 1 ORDER BY id DESC")
+
+    async def update_row(self, table, key, key2):
+        """Update one row"""
+        await self.exec(f"UPDATE {table} SET {key} WHERE {key2}")
+
+    async def new_row_one_word(self, game_id, words_json, author_id):
+        await self.exec(
+            "INSERT INTO one_word (id, words, last_author_id) VALUES (?, ?, ?)", (game_id, words_json, author_id)
+        )
+
+    async def add_coins(self, user_id, amount):
+        """Execute multiple queries in one connection."""
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
+            await cursor.exec("UPDATE users SET coins = coins + ? WHERE user_id = ?", (amount, user_id))
+
+    async def get_users(self):
+        """Return all result rows."""
+        return await self.all("SELECT * FROM users")
+
+    async def get_one_row(self, table, key, user_id):
+        """Return one result row."""
+        return await self.one(f"SELECT * FROM {table} WHERE {key} = ?", (user_id,))
+
+
+db = UserDB()

@@ -58,8 +58,8 @@ async def select_winner(user_selection1, user_selection2):
         or (user_selection1 == "Papier" and user_selection2 == "Stein")
         or (user_selection1 == "Schere" and user_selection2 == "Papier")
     ):
-        return
-    return
+        return None
+    return None
 
 
 class Games(commands.Cog):

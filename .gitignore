@@ -5,8 +5,7 @@ uv.lock
 .env
 config.cfg
 logs
-data
-config.cfg
+data/database.db
 cogs/*
 !cogs/*.py
 /__pycache__

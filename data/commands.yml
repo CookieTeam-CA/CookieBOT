@@ -1,0 +1,20 @@
+en-US:
+  one_word_list:
+    name: one_word_history
+    description: Shows the final sentence history of One Word!
+
+  cogs:
+    OneWordChallenge:
+      name: One Word
+      description: These are the commands for the One Word game.
+
+
+de:
+  one_word_list:
+    name: one_word_verlauf
+    description: Zeigt den Verlauf der finalen Sätze von One Word an!
+
+  cogs:
+    OneWordChallenge:
+      name: One Word
+      description: Das sind die Befehle des One Words Spiels.

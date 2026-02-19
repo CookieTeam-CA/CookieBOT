@@ -54,12 +54,6 @@ class GuessNumber(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        async with aiosqlite.connect(self.db) as db:
-            await db.execute("""
-                CREATE TABLE IF NOT EXISTS gtn_stats (
-                user_id INTEGER PRIMARY KEY,
-                wins INTEGER DEFAULT 0,
-                guess INTEGER DEFAULT 0)""")
         logging.info("guess_number.py is ready")
         await self.new_game()
 

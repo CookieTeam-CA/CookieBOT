@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import sys
+import yaml
 from logging.handlers import RotatingFileHandler
 
 import discord
@@ -10,18 +11,23 @@ import ezcord
 from dotenv import load_dotenv
 from ezcord import log
 
+import dbhandler
 from utils import greeter_builder, safe_add_role, safe_embed_channel_send
 
 os.makedirs("logs", exist_ok=True)
+os.makedirs("data", exist_ok=True)
+if not os.path.exists(".env"):
+    with open(".env", "w", encoding="utf-8") as f:
+        f.write("TOKEN=\n")
 
 file_handler = RotatingFileHandler(filename="logs/bot.log", maxBytes=2 * 1024 * 1024, backupCount=10, encoding="utf-8")
 
-file_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"))
+file_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(filename)s:%(lineno)d | %(message)s"))
 
 logger = ezcord.logs.set_log(
     log_level=logging.DEBUG,
     console=False,
-    log_format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    log_format="%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
 )
 
 logger.addHandler(file_handler)
@@ -52,6 +58,7 @@ except (KeyError, ValueError) as e:
 
 @bot.event
 async def on_ready():
+    await dbhandler.db.setup()
     print("System is up and running.")
 
 
@@ -128,6 +135,8 @@ async def on_member_remove(member):
     else:
         log.warning(f"{member} left from a Server that wasn't configured")
 
+with open("data/commands.yml", encoding="utf-8") as file:
+    cmd_locales = yaml.safe_load(file)
 
 if __name__ == "__main__":
     load_dotenv()
@@ -135,4 +144,5 @@ if __name__ == "__main__":
     bot.load_extension("cogs.one_word")
     # bot.load_extension("cogs.memes")
     # bot.load_extension("cogs.games")
+    bot.localize_commands(cmd_locales)
     bot.run(os.getenv("TOKEN"))

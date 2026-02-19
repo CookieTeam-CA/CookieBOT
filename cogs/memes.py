@@ -1,4 +1,4 @@
-# i am not proud of it but it works, and never change a running system or smth like that
+# I am not proud of it, but it works, and never change a running system or smth like that
 
 # needs polish
 import configparser
@@ -29,20 +29,6 @@ class MemeVoting(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        async with aiosqlite.connect(self.database) as db:
-            await db.execute("""
-                CREATE TABLE IF NOT EXISTS memes (
-                user_id INTEGER DEFAULT NULL,
-                msg_id INTEGER PRIMARY KEY,
-                meme_url STRING DEFAULT NULL,
-                meme_txt STRING DEFAULT NULL,
-                votes INTEGER DEFAULT 0)""")
-            await db.execute("""
-                CREATE TABLE IF NOT EXISTS meme_votes (
-                msg_id INTEGER,
-                user_id INTEGER,
-                vote INTEGER CHECK(vote IN (-1, 1)),
-                PRIMARY KEY (msg_id, user_id))""")
         logging.info("memes.py is ready")
 
     @commands.Cog.listener()
