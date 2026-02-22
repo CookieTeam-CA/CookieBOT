@@ -29,6 +29,7 @@ class GuessNumber(commands.Cog):
         self.number1 = None
         self.number2 = None
         self.last_game_message = None
+        self.race_condition = None
 
     async def new_game(self):
         difficulties = {
@@ -37,11 +38,11 @@ class GuessNumber(commands.Cog):
             "schwer": (1, 100, 101, 200, discord.Color.red()),
         }
         difficulty = random.choice(list(difficulties.keys()))
-        (one1, two1, one2, two2, color) = difficulties[difficulty]
+        (least_min, highest_min, least_max, highest_max, color) = difficulties[difficulty]
 
         self.id = int(time.time() * 1000)
-        self.number1 = random.randint(one1, two1)
-        self.number2 = random.randint(one2, two2)
+        self.number1 = random.randint(least_min, highest_min)
+        self.number2 = random.randint(least_max, highest_max)
         self.number = random.randint(self.number1, self.number2)
 
         embed = discord.Embed(
@@ -52,8 +53,10 @@ class GuessNumber(commands.Cog):
             timestamp=datetime.now(tz=self.de),
         )
         self.last_game_message = await utils.safe_embed_channel_send(self.bot, self.channel, embed=embed)
+        self.race_condition = False
 
-        await discord.Message.pin(self.last_game_message, reason="Guess the Number Game")
+        await utils.safe_pin(self.last_game_message, "GTN GAME")
+
         self.last_game_message = self.last_game_message.id
 
         await dbhandler.db.new_gtn_game(self.id, self.number1, self.number2, self.number, self.last_game_message)
@@ -82,9 +85,7 @@ class GuessNumber(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
-        if message.author.bot:
-            return
-        if message.channel.id != self.channel:
+        if self.race_condition is True or message.channel.id != self.channel or message.author.bot:
             return
 
         try:
@@ -95,6 +96,7 @@ class GuessNumber(commands.Cog):
         await dbhandler.db.add_smth_and_insert("gtn_stats", "user_id", message.author.id, "guess", 1)
 
         if guess == self.number:
+            self.race_condition = True
             await dbhandler.db.add_smth("gtn_stats", "wins", 1, "user_id", message.author.id)
 
             result = await dbhandler.db.get_one_row("gtn_stats", "user_id", message.author.id)

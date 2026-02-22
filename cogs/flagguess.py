@@ -259,7 +259,7 @@ class FlagGuessingCog(commands.Cog):
                 )
 
                 if result[3] > 3:
-                    embed.set_footer(text=f"Deine neue Streak ist {result[3]}")
+                    embed.set_footer(text=f"Deine Streak: {result[3]}")
                 else:
                     embed.set_footer(text=f"Deine Gewinnchance: {round(result[1] / result[2] * 100)}%")
                     log.info(f"{message.author} hat eine Flagge erraten.")

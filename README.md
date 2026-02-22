@@ -1,3 +1,5 @@
+This Bot can only be active on one Server at a time!
+
 ## Log Levels
 | Level       | Info                                                                                |
 |-------------|-------------------------------------------------------------------------------------|
