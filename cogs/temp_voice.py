@@ -138,6 +138,7 @@ class TempVoice(commands.Cog):
         panel_msg = await channel.send(view=view)
         self._panel_messages[channel.id] = panel_msg
         await dbhandler.db.create_temp_channel(channel.id, member.id, panel_msg.id)
+        await channel.move(beginning=True, offset=2)
         log.info(f"Channel created: {channel.name} (Owner: {member})")
 
     async def _cleanup_channel(self, channel: discord.VoiceChannel) -> None:
