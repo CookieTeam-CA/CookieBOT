@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import configparser
 import random
+from contextlib import suppress
 
 import discord
 from ezcord import log
 from ezcord.internal.dc import commands
 
 import dbhandler
-from cogs.temp_voice_ui import (
+from temp_voice_ui import (
     LimitModal,
     RenameModal,
     UnbanView,
@@ -107,10 +108,8 @@ class TempVoice(commands.Cog):
     async def _delete_panel(self, channel_id: int) -> None:
         msg = self._panel_messages.pop(channel_id, None)
         if msg:
-            try:
+            with suppress(discord.NotFound, discord.Forbidden):
                 await msg.delete()
-            except (discord.NotFound, discord.Forbidden):
-                pass
 
     async def _create_temp_channel(self, member: discord.Member) -> None:
         guild = member.guild
@@ -146,10 +145,8 @@ class TempVoice(commands.Cog):
         self._temp_channels.pop(cid, None)
         self._channel_owners.pop(cid, None)
 
-        try:
-            await channel.delete(reason="TempVoice - Channel leer")
-        except (discord.NotFound, discord.Forbidden):
-            pass
+        with suppress(discord.NotFound, discord.Forbidden):
+            await channel.delete(reason="TempVoice gelöscht weil Channel leer")
 
         await dbhandler.db.delete_temp_channel(cid)
         await dbhandler.db.cleanup_bans(cid)
@@ -197,7 +194,7 @@ class TempVoice(commands.Cog):
         ):
             await self._edit_panel(after.channel)
 
-        if before.channel and self._is_temp(before.channel.id):
+        if before.channel and self._is_temp(before.channel.id) and before.channel != after.channel:
             channel = before.channel
             remaining = [m for m in channel.members if not m.bot]
 
@@ -289,10 +286,8 @@ class TempVoice(commands.Cog):
 
     async def _act_delete(self, interaction: discord.Interaction, channel: discord.VoiceChannel) -> None:
         for m in list(channel.members):
-            try:
+            with suppress(discord.Forbidden, discord.HTTPException):
                 await m.move_to(None)
-            except (discord.Forbidden, discord.HTTPException):
-                pass
 
         await interaction.response.send_message("Channel wird gelöscht...", ephemeral=True)
         cid = channel.id
@@ -324,10 +319,8 @@ class TempVoice(commands.Cog):
         await channel.set_permissions(target, connect=False, reason=f"Gebannt von {interaction.user.display_name}")
 
         if target in channel.members:
-            try:
+            with suppress(discord.Forbidden, discord.HTTPException):
                 await target.move_to(None)
-            except (discord.Forbidden, discord.HTTPException):
-                pass
 
         await dbhandler.db.add_ban(channel.id, target_id)
         await interaction.response.send_message(
@@ -352,12 +345,10 @@ class TempVoice(commands.Cog):
         await self._transfer_ownership(channel, old_owner, new_owner)
         await interaction.response.send_message(f"Ownership wurde an {new_owner.mention} übertragen.", ephemeral=True)
 
-        try:
+        with suppress(discord.Forbidden):
             await new_owner.send(
                 f"**{old_owner.display_name}** hat dir die Ownership von **{channel.name}** übertragen!"
             )
-        except discord.Forbidden:
-            pass
 
     async def _act_mute_all(
         self,
@@ -370,7 +361,9 @@ class TempVoice(commands.Cog):
             if m.bot or m.id == interaction.user.id:
                 continue
             try:
-                await m.edit(mute=mute, reason=f"{'Mute' if mute else 'Unmute'} All von {interaction.user.display_name}")
+                await m.edit(
+                    mute=mute, reason=f"{'Mute' if mute else 'Unmute'} All von {interaction.user.display_name}"
+                )
             except (discord.Forbidden, discord.HTTPException):
                 failed += 1
 
