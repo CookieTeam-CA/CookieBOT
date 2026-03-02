@@ -44,5 +44,5 @@ typing-extensions==4.15.0
     # via py-cord
 tzdata==2025.3
     # via cookiebot (pyproject.toml)
-yarl==1.22.0
+yarl==1.23.0
     # via aiohttp
