@@ -261,7 +261,7 @@ class FlagGuessingCog(commands.Cog):
                 if result[3] > 3:
                     embed.set_footer(text=f"Deine Streak: {result[3]}")
                 else:
-                    embed.set_footer(text=f"Deine Gewinnchance: {round(result[1] / result[2] * 100)}%")
+                    embed.set_footer(text=f"Deine Winrate: {round(result[1] / result[2] * 100)}%")
                     log.info(f"{message.author} hat eine Flagge erraten.")
                 await message.add_reaction("✅")
                 await safe_embed_channel_send(self.bot, message.channel.id, embed=embed)

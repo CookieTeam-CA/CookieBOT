@@ -75,9 +75,7 @@ class OneWordChallenge(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author == self.bot.user:
-            return
-        if message.channel.id != self.channel:
+        if message.channel.id != self.channel or message.author.bot:
             return
         if self.last_author == message.author.id:
             msg = await message.reply(

@@ -344,12 +344,9 @@ class TempVoice(commands.Cog):
 
         old_owner = interaction.user
         await self._transfer_ownership(channel, old_owner, new_owner)
-        await interaction.response.send_message(f"Ownership wurde an {new_owner.mention} übertragen.", ephemeral=True)
-
-        with suppress(discord.Forbidden):
-            await new_owner.send(
-                f"**{old_owner.display_name}** hat dir die Ownership von **{channel.name}** übertragen!"
-            )
+        await interaction.response.send_message(
+            f"{old_owner.mention} hat die Owner Rechte für den Channel an {new_owner.mention} übertragen!"
+        )
 
     async def _act_mute_all(
         self,

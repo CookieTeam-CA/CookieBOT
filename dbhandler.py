@@ -66,6 +66,26 @@ class UserDB(ezcord.DBHandler):
         channel_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
         PRIMARY KEY (channel_id, user_id))""")
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS counting (
+        id INTEGER PRIMARY KEY,
+        count INTEGER DEFAULT 0,
+        highscore INTEGER DEFAULT 0)""")
+
+    ### --- COUNTING ---
+    async def init_counting(self):
+        await self.exec("INSERT OR IGNORE INTO counting (id, count, highscore) VALUES (1, 0, 0)")
+
+    async def get_counting_state(self):
+        return await self.one("SELECT count, highscore FROM counting WHERE id = 1")
+
+    async def update_counting(self, count):
+        await self.exec("UPDATE counting SET count = ?, highscore = MAX(highscore, ?) WHERE id = 1", (count, count))
+
+    ### --- OTHER ---
+
+    async def insert_smth(self, table, key, value):
+        await self.exec(f"INSERT INTO {table} ({key}) VALUES (?)", (value,))
 
     async def change_owner(self, channel, new_owner):
         await self.exec(
@@ -90,6 +110,9 @@ class UserDB(ezcord.DBHandler):
 
     async def set_smth(self, table, key, amount, id_key, user_id):
         await self.exec(f"UPDATE {table} SET {key} = {amount} WHERE {id_key} = ?", (user_id,))
+
+    async def set_smth_without_where(self, table, key, amount):
+        await self.exec(f"UPDATE {table} SET {key} = {amount}")
 
     async def update_one_word(self, words_json, author_id, game_id, done):
         await self.exec(

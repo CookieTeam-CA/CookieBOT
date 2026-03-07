@@ -36,13 +36,15 @@ propcache==0.4.1
     #   yarl
 py-cord==2.7.1
     # via cookiebot (pyproject.toml)
-python-dotenv==1.2.1
+python-dotenv==1.2.2
     # via ezcord
 pyyaml==6.0.3
     # via ezcord
+simpleeval==1.0.3
+    # via cookiebot (pyproject.toml)
 typing-extensions==4.15.0
     # via py-cord
 tzdata==2025.3
     # via cookiebot (pyproject.toml)
-yarl==1.22.0
+yarl==1.23.0
     # via aiohttp
