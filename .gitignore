@@ -3,9 +3,9 @@ uv.lock
 .DS_Store
 .idea
 .env
-config.cfg
+config/config.cfg
 logs
 data/database.db
-cogs/*
+bot/cogs/*
 !cogs/*.py
 /__pycache__

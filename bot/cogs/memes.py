@@ -1,7 +1,6 @@
 # I am not proud of it, but it works, and never change a running system or smth like that
 
 # needs polish
-import configparser
 import logging
 from zoneinfo import ZoneInfo
 
@@ -23,9 +22,6 @@ class MemeVoting(commands.Cog):
         self.bot = bot
         self.database = "data/database.db"
         self.de = ZoneInfo("Europe/Berlin")
-        self.parser = configparser.ConfigParser()
-        self.parser.read("config.cfg")
-        self.channel = int(self.parser["CHANNELS"]["memes"])
 
     @commands.Cog.listener()
     async def on_ready(self):

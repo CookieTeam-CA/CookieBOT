@@ -68,7 +68,7 @@ def build_control_panel(
     # Header
     header = discord.ui.TextDisplay(
         content=(
-            f"## VoiceChat Controll Panel\n"
+            f"## VoiceChat Control Panel\n"
             f"**{discord.utils.escape_markdown(channel.name)}**\n"
             f"👑 Owner: {owner.mention}\n"
             f"👥 {member_count}/{limit_str} Mitglieder\n"

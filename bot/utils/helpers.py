@@ -1,3 +1,4 @@
+import configparser
 from contextlib import suppress
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -74,3 +75,15 @@ async def safe_unpin(message_id, channel, reason=None):
     with suppress(discord.HTTPException, discord.NotFound):
         msg = await channel.fetch_message(message_id)
         await msg.unpin(reason=reason)
+
+
+def load_config(category, name, art: "int" or "str"):
+    parser = configparser.ConfigParser()
+    parser.read("config/config.cfg")
+    try:
+        if art == "int":
+            return int(parser[category][name])
+        else:
+            return parser[category][name]
+    except (KeyError, ValueError):
+        log.error(f"{category} {name} not found in config.cfg!")

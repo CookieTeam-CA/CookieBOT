@@ -1,12 +1,12 @@
 import asyncio
-import configparser
 
 import discord
 import simpleeval
 from discord.ext import commands
 from ezcord import log
 
-import dbhandler
+from bot.db import handler
+from bot.utils.helpers import load_config
 
 
 class CountingCog(commands.Cog):
@@ -14,22 +14,16 @@ class CountingCog(commands.Cog):
         self.bot = bot
         self.lock = asyncio.Lock()
 
-        self.parser = configparser.ConfigParser()
-        self.parser.read("config.cfg")
-        try:
-            self.channel_id = int(self.parser["CHANNELS"]["counting"])
-        except (KeyError, ValueError):
-            log.error("Counting ID not found in config.cfg!")
-            self.channel_id = None
+        self.channel_id = load_config("CHANNELS", "counting", "int")
 
         self.count = 0
         self.previous_author_id = None
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await dbhandler.db.init_counting()
+        await handler.db.init_counting()
 
-        state = await dbhandler.db.get_counting_state()
+        state = await handler.db.get_counting_state()
         if state:
             self.count = state[0]
 
@@ -66,7 +60,7 @@ class CountingCog(commands.Cog):
             if result == self.count + 1:
                 self.count += 1
                 self.previous_author_id = message.author.id
-                await dbhandler.db.update_counting(self.count)
+                await handler.db.update_counting(self.count)
                 await message.add_reaction("✅")
             else:
                 embed = discord.Embed(
@@ -77,11 +71,11 @@ class CountingCog(commands.Cog):
                 await self.fail_game(message, embed)
 
     async def fail_game(self, message, embed):
-        highscore = await dbhandler.db.get_counting_state()
+        highscore = await handler.db.get_counting_state()
 
         self.count = 0
         self.previous_author_id = None
-        await dbhandler.db.update_counting(0)
+        await handler.db.update_counting(0)
 
         await message.add_reaction("❌")
         await message.channel.send(embed=embed)

@@ -1,5 +1,4 @@
 import asyncio
-import configparser
 import json
 import time
 from zoneinfo import ZoneInfo
@@ -9,8 +8,8 @@ from discord.ext import commands
 from ezcord import log
 from ezcord.internal.dc import slash_command
 
-import dbhandler
-import utils
+from bot.db import handler
+from bot.utils.helpers import load_config, safe_delete
 
 
 class ButtonPaginator(discord.ui.View):
@@ -42,20 +41,16 @@ class OneWordChallenge(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.de = ZoneInfo("Europe/Berlin")
-        self.parser = configparser.ConfigParser()
-        self.parser.read("config.cfg")
-        try:
-            self.channel = int(self.parser["CHANNELS"]["one_word"])
-        except (KeyError, ValueError):
-            log.error("OneWord ID not found in config.cfg!")
-            self.channel = None
+
+        self.channel = load_config("CHANNELS", "one_word", "int")
+
         self.id = None
         self.words = []
         self.last_author = None
 
     @commands.Cog.listener()
     async def on_ready(self):
-        last_game_state = await dbhandler.db.get_latest_row("one_word", "id")
+        last_game_state = await handler.db.get_latest_row("one_word", "id")
 
         if last_game_state and last_game_state[3] == 0:
             self.id = last_game_state[0]
@@ -82,9 +77,9 @@ class OneWordChallenge(commands.Cog):
                 "Du darfst nicht 2 Wörter hintereinander schreiben.",
                 mention_author=False,
             )
-            await utils.safe_delete(message)
+            await safe_delete(message)
             await asyncio.sleep(5)
-            await utils.safe_delete(msg)
+            await safe_delete(msg)
             return
 
         content = message.content.strip()
@@ -95,9 +90,9 @@ class OneWordChallenge(commands.Cog):
 
             if self.id is None:
                 self.id = int(time.time() * 1000)
-                await dbhandler.db.new_row_one_word(self.id, json.dumps(self.words), self.last_author)
+                await handler.db.new_row_one_word(self.id, json.dumps(self.words), self.last_author)
             else:
-                await dbhandler.db.update_one_word(json.dumps(self.words), self.last_author, self.id, 0)
+                await handler.db.update_one_word(json.dumps(self.words), self.last_author, self.id, 0)
 
             await message.add_reaction("✅")
 
@@ -107,20 +102,20 @@ class OneWordChallenge(commands.Cog):
                 )
                 embed.set_footer(text="Nutze /one_word_list um vorherige Sätze anzuschauen!")
                 await message.channel.send(embed=embed)
-                await dbhandler.db.update_one_word(json.dumps(self.words), self.last_author, self.id, 1)
+                await handler.db.update_one_word(json.dumps(self.words), self.last_author, self.id, 1)
                 self.id = None
                 self.words = []
         else:
             msg = await message.reply("Du darfst nur ein Wort schreiben.", mention_author=False)
-            await utils.safe_delete(message)
+            await safe_delete(message)
             await asyncio.sleep(5)
-            await utils.safe_delete(msg)
+            await safe_delete(msg)
 
     @slash_command()
     async def one_word_list(self, ctx):
         log.debug(f"{ctx.author.name} used /one_word_list")
         await ctx.defer()
-        data = await dbhandler.db.get_finished_games()
+        data = await handler.db.get_finished_games()
 
         if not data:
             await ctx.respond("Es wurden noch keine Sätze vervollständigt.", ephemeral=True)

@@ -1,4 +1,3 @@
-import configparser
 import random
 import time
 from datetime import datetime
@@ -8,21 +7,16 @@ import discord
 from discord.ext import commands
 from ezcord import log
 
-import dbhandler
-import utils
+from bot.db import handler
+from bot.utils.helpers import load_config, safe_delete, safe_embed_channel_send, safe_pin, safe_unpin
 
 
 class GuessNumber(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.de = ZoneInfo("Europe/Berlin")
-        self.parser = configparser.ConfigParser()
-        self.parser.read("config.cfg")
-        try:
-            self.channel = int(self.parser["CHANNELS"]["guess_number_channel"])
-        except (KeyError, ValueError):
-            log.error("GuessNumberChannel ID not found in config.cfg!")
-            self.channel = None
+
+        self.channel = load_config("CHANNELS", "guess_number_channel", "int")
 
         self.id = None
         self.number = None
@@ -52,24 +46,24 @@ class GuessNumber(commands.Cog):
             color=color,
             timestamp=datetime.now(tz=self.de),
         )
-        self.last_game_message = await utils.safe_embed_channel_send(self.bot, self.channel, embed=embed)
+        self.last_game_message = await safe_embed_channel_send(self.bot, self.channel, embed=embed)
         self.race_condition = False
 
-        await utils.safe_pin(self.last_game_message, "GTN GAME")
+        await safe_pin(self.last_game_message, "GTN GAME")
 
         self.last_game_message = self.last_game_message.id
 
-        await dbhandler.db.new_gtn_game(self.id, self.number1, self.number2, self.number, self.last_game_message)
+        await handler.db.new_gtn_game(self.id, self.number1, self.number2, self.number, self.last_game_message)
 
         async for message in self.bot.get_channel(self.channel).history(limit=1):
             if message.type == discord.MessageType.pins_add:
-                await utils.safe_delete(message)
+                await safe_delete(message)
 
         log.info(f"Guess Number was sent, the number is {self.number}.")
 
     @commands.Cog.listener()
     async def on_ready(self):
-        last_game_row = await dbhandler.db.get_latest_row("gtn_save", "id")
+        last_game_row = await handler.db.get_latest_row("gtn_save", "id")
 
         if last_game_row is None or last_game_row[5] == 1:
             await self.new_game()
@@ -93,13 +87,13 @@ class GuessNumber(commands.Cog):
         except ValueError:
             return
 
-        await dbhandler.db.add_smth_and_insert("gtn_stats", "user_id", message.author.id, "guess", 1)
+        await handler.db.add_smth_and_insert("gtn_stats", "user_id", message.author.id, "guess", 1)
 
         if guess == self.number:
             self.race_condition = True
-            await dbhandler.db.add_smth("gtn_stats", "wins", 1, "user_id", message.author.id)
+            await handler.db.add_smth("gtn_stats", "wins", 1, "user_id", message.author.id)
 
-            result = await dbhandler.db.get_one_row("gtn_stats", "user_id", message.author.id)
+            result = await handler.db.get_one_row("gtn_stats", "user_id", message.author.id)
             wins = result[1]
             guesses = result[2]
             winrate = round((wins / guesses) * 100 if guesses > 0 else 0)
@@ -110,11 +104,11 @@ class GuessNumber(commands.Cog):
                 color=discord.Color.green(),
             )
             embed.set_footer(text=f"Du hast eine Gewinnchance von {round(winrate, 2)}%.")
-            await utils.safe_embed_channel_send(self.bot, self.channel, embed=embed)
-            await dbhandler.db.set_smth("gtn_save", "done", 1, "id", self.id)
+            await safe_embed_channel_send(self.bot, self.channel, embed=embed)
+            await handler.db.set_smth("gtn_save", "done", 1, "id", self.id)
 
             if self.last_game_message:
-                await utils.safe_unpin(self.last_game_message, message.channel)
+                await safe_unpin(self.last_game_message, message.channel)
 
             await message.add_reaction("✅")
             await self.new_game()

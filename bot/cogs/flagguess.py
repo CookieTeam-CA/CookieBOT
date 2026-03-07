@@ -1,25 +1,19 @@
 import asyncio
-import configparser
 import random
 
 import discord
 from discord.ext import commands
 from ezcord import log
 
-import dbhandler
-from utils import safe_embed_channel_send
+from bot.db import handler
+from bot.utils.helpers import load_config, safe_embed_channel_send
 
 
 class FlagGuessingCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.parser = configparser.ConfigParser()
-        self.parser.read("config.cfg")
-        try:
-            self.channel = int(self.parser["CHANNELS"]["flags"])
-        except (KeyError, ValueError):
-            log.error("FlagChannel ID not found in config.cfg!")
-            self.channel = None
+
+        self.channel = load_config("CHANNELS", "flags", "int")
 
         self.flag_dict = {
             "af": ["Afghanistan", "Afghanistan"],
@@ -235,7 +229,7 @@ class FlagGuessingCog(commands.Cog):
         self.cooldown = False
         self.current_flag = random.choice(list(self.flag_dict.keys()))
         log.debug(f"the flag is {self.current_flag}")
-        file = discord.File(f"img/flags/{self.current_flag}" + ".png", filename="flag.png")
+        file = discord.File(f"assets/flags/{self.current_flag}" + ".png", filename="flag.png")
         embed = discord.Embed(title="Neue Flagge!", color=discord.Color.random())
         embed.set_image(url="attachment://flag.png")
         await safe_embed_channel_send(self.bot, self.channel, embed=embed, file=file)
@@ -247,11 +241,11 @@ class FlagGuessingCog(commands.Cog):
         if message.author == self.bot.user:
             return
         if message.channel.id == self.channel and self.current_flag is not None:
-            await dbhandler.db.insert_user("flag_stats", "user_id", message.author.id)
+            await handler.db.insert_user("flag_stats", "user_id", message.author.id)
 
             if message.content.lower() in [name.lower() for name in self.flag_dict[self.current_flag]]:
-                await dbhandler.db.update_flag_stats(message.author.id, True)
-                result = await dbhandler.db.get_one_row("flag_stats", "user_id", message.author.id)
+                await handler.db.update_flag_stats(message.author.id, True)
+                result = await handler.db.get_one_row("flag_stats", "user_id", message.author.id)
                 embed = discord.Embed(
                     title="Richtig!",
                     description=f"**{message.author.mention}** hat die Flagge **{message.content}** richtig erraten.",
@@ -269,8 +263,8 @@ class FlagGuessingCog(commands.Cog):
                 await self.start_new_game()
             else:
                 await message.add_reaction("❌")
-                result = await dbhandler.db.get_one_row("flag_stats", "user_id", message.author.id)
-                await dbhandler.db.update_flag_stats(message.author.id, False)
+                result = await handler.db.get_one_row("flag_stats", "user_id", message.author.id)
+                await handler.db.update_flag_stats(message.author.id, False)
 
                 embed = discord.Embed(
                     title="Streak kaputt!",
