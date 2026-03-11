@@ -40,7 +40,7 @@ python-dotenv==1.2.2
     # via ezcord
 pyyaml==6.0.3
     # via ezcord
-simpleeval==1.0.3
+simpleeval==1.0.4
     # via cookiebot (pyproject.toml)
 typing-extensions==4.15.0
     # via py-cord
