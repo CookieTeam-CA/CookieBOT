@@ -66,11 +66,17 @@ class UserDB(ezcord.DBHandler):
         channel_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
         PRIMARY KEY (channel_id, user_id))""")
+        # Counting
         await self.exec("""
         CREATE TABLE IF NOT EXISTS counting (
         id INTEGER PRIMARY KEY,
         count INTEGER DEFAULT 0,
         highscore INTEGER DEFAULT 0)""")
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS counting_stats (
+        user_id INTEGER PRIMARY KEY,
+        counts INTEGER DEFAULT 0,
+        fails INTEGER DEFAULT 0)""")
 
     ### --- COUNTING ---
     async def init_counting(self):
@@ -79,8 +85,13 @@ class UserDB(ezcord.DBHandler):
     async def get_counting_state(self):
         return await self.one("SELECT count, highscore FROM counting WHERE id = 1")
 
-    async def update_counting(self, count):
+    async def update_counting(self, count, user_id, fail=0):
         await self.exec("UPDATE counting SET count = ?, highscore = MAX(highscore, ?) WHERE id = 1", (count, count))
+        await self.exec(
+            "INSERT INTO counting_stats (user_id, counts, fails) VALUES (?, 1, ?) ON CONFLICT(user_id) DO "
+            "UPDATE SET counts = counts + 1, fails = fails + ? WHERE user_id = ?",
+            (user_id, fail, fail, user_id),
+        )
 
     ### --- OTHER ---
 

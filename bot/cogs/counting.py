@@ -45,7 +45,7 @@ class CountingCog(commands.Cog):
                 if not isinstance(result, (int, float)):
                     return
                 result = int(result)
-            except:
+            except Exception:
                 return
 
             if message.author.id == self.previous_author_id:
@@ -60,8 +60,11 @@ class CountingCog(commands.Cog):
             if result == self.count + 1:
                 self.count += 1
                 self.previous_author_id = message.author.id
-                await handler.db.update_counting(self.count)
+                await handler.db.update_counting(self.count, message.author.id)
                 await message.add_reaction("✅")
+
+                if self.count == 67:
+                    await message.add_reaction("🔫")
             else:
                 embed = discord.Embed(
                     title="Verkackt!",
@@ -75,7 +78,7 @@ class CountingCog(commands.Cog):
 
         self.count = 0
         self.previous_author_id = None
-        await handler.db.update_counting(0)
+        await handler.db.update_counting(0, message.author.id, fail=1)
 
         await message.add_reaction("❌")
         await message.channel.send(embed=embed)
