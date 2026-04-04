@@ -1,6 +1,7 @@
 import configparser
 from contextlib import suppress
 from datetime import datetime
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 import discord
@@ -77,7 +78,7 @@ async def safe_unpin(message_id, channel, reason=None):
         await msg.unpin(reason=reason)
 
 
-def load_config(category, name, art: "int" or "str"):
+def load_config(category, name, art: Literal["int", "str"]):
     parser = configparser.ConfigParser()
     parser.read("config/config.cfg")
     try:

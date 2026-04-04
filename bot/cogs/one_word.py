@@ -10,31 +10,7 @@ from ezcord.internal.dc import slash_command
 
 from bot.db import handler
 from bot.utils.helpers import load_config, safe_delete
-
-
-class ButtonPaginator(discord.ui.View):
-    def __init__(self, pages):
-        super().__init__(timeout=600)
-        self.pages = pages
-        self.current_page = 0
-
-    async def update_view(self, interaction: discord.Interaction):
-        self.update_buttons()
-        await interaction.response.edit_message(embed=self.pages[self.current_page], view=self)
-
-    def update_buttons(self):
-        self.prev_button.disabled = self.current_page == 0
-        self.next_button.disabled = self.current_page == len(self.pages) - 1
-
-    @discord.ui.button(label="◀", style=discord.ButtonStyle.gray)
-    async def prev_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.current_page -= 1
-        await self.update_view(interaction)
-
-    @discord.ui.button(label="▶", style=discord.ButtonStyle.gray)
-    async def next_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.current_page += 1
-        await self.update_view(interaction)
+from bot.utils.pagination import EmbedPaginator, build_pages
 
 
 class OneWordChallenge(commands.Cog):
@@ -113,40 +89,26 @@ class OneWordChallenge(commands.Cog):
 
     @slash_command()
     async def one_word_list(self, ctx):
-        log.debug(f"{ctx.author.name} used /one_word_list")
         await ctx.defer()
         data = await handler.db.get_finished_games()
 
         if not data:
-            await ctx.respond("Es wurden noch keine Sätze vervollständigt.", ephemeral=True)
-            return
+            return await ctx.respond("Es wurden noch keine Sätze vervollständigt.", ephemeral=True)
 
-        embeds = []
-        chunk_size = 5
-        chunks = [data[i : i + chunk_size] for i in range(0, len(data), chunk_size)]
-
-        for i, chunk in enumerate(chunks):
-            embed = discord.Embed(title="📚 One Word Verlauf", color=discord.Color.blue())
-            embed.set_footer(text=f"Seite {i + 1} von {len(chunks)}")
-
+        def builder(i, chunk, embed):
             for row in chunk:
-                game_id, json_words, last_author_id = row[0], row[1], row[2]
-
                 try:
-                    words_list = json.loads(json_words) if json_words else []
-                    sentence = " ".join(words_list)
+                    sentence = " ".join(json.loads(row[1]) if row[1] else [])
                 except json.JSONDecodeError:
                     sentence = "*Fehler beim Laden*"
-
                 embed.add_field(
-                    name=f"Satz #{game_id}", value=f"💬 {sentence}\n🏁 Beendet von: <@{last_author_id}>", inline=False
+                    name=f"Satz #{row[0]}",
+                    value=f"💬 {sentence}\n🏁 Beendet von: <@{row[2]}>",
+                    inline=False,
                 )
 
-            embeds.append(embed)
-
-        view = ButtonPaginator(embeds)
-        view.update_buttons()
-        await ctx.respond(embed=embeds[0], view=view)
+        pages = build_pages(data, title="📚 One Word Verlauf", builder=builder)
+        await EmbedPaginator(pages).send(ctx)
 
 
 def setup(bot):

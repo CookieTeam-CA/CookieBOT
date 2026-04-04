@@ -8,13 +8,36 @@ en-US:
   mc_skin:
     name: mc_skin
     description: Shows the Minecraft Skin from a Minecraft Player.
+  add_reactionrole:
+    name: add_reactionrole
+    description: Adds a Reactionrole to a given Message.
+    options:
+      message_id:
+        name: message_id
+        description: The Discord ID of the message.
+      emoji:
+        name: emoji
+        description: The emoji to react to get the reactionrole.
+      role:
+        name: role
+        description: The role the user should get if the emoji gets clicked.
+  remove_reactionrole:
+    name: remove_reactionrole
+    description: Removes a Reactionrole from a given Message with a Reactionrole attached.
+    options:
+      message_id:
+        name: message_id
+        description: The Discord ID of the message from which you want to remove the reaction role.
+      emoji:
+        name: emoji
+        description: The emoji you want to use for the reaction role you want to delete.
 
   cogs:
     OneWordChallenge:
       name: One Word
       description: These are the commands for the One Word game.
     Utility:
-      description: Nützliche Tools & Informationsbefehle
+      description: Useful Tools & Information Commands
 
 
 de:
@@ -27,10 +50,33 @@ de:
   mc_skin:
     name: mc_skin
     description: Zeigt den Minecraft Skin von einem Minecraft Spieler.
+  add_reactionrole:
+    name: reactionrole_hinzufuegen
+    description: Fügt eine Reactionrole zu einer gegebenen Nachricht hinzu.
+    options:
+      message_id:
+        name: nachricht_id
+        description: Die Discord ID der Nachricht.
+      emoji:
+        name: emoji
+        description: Das Emoji zum reagieren für die Reactionrole.
+      role:
+        name: rolle
+        description: Die Rolle die der User bekommen soll sobald er das Emoji andrückt.
+  remove_reactionrole:
+    name: reactionrole_entfernen
+    description: Entfernt eine Reactionrole von einer gegebenen Nachricht die eine Reactionrole angehängt hat.
+    options:
+      message_id:
+        name: nachricht_id
+        description: Die Discord ID der Nachricht von der du die Reactionrole löschen willst.
+      emoji:
+        name: emoji
+        description: Das Emoji zum reagieren für die Reactionrole die du löschen willst.
 
   cogs:
     OneWordChallenge:
       name: One Word
       description: Das sind die Befehle des One Words Spiels.
     Utility:
-      description: Useful Tools & Information Commands
+      description: Nützliche Tools & Informationsbefehle

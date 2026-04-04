@@ -77,6 +77,25 @@ class UserDB(ezcord.DBHandler):
         user_id INTEGER PRIMARY KEY,
         counts INTEGER DEFAULT 0,
         fails INTEGER DEFAULT 0)""")
+        # Reactionrole
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS reactionroles (
+        msg_id INTEGER PRIMARY KEY,
+        emoji STRING DEFAULT NULL,
+        role_id INTEGER NOT NULL)""")
+
+    ### --- REACTIONROLES ---
+    async def create_rr(self, msg_id, emoji, role_id):
+        await self.exec("INSERT INTO reactionroles (msg_id, emoji, role_id) VALUES (?, ?, ?)", (msg_id, emoji, role_id))
+
+    async def get_reactionroles(self):
+        return await self.all("SELECT * FROM reactionroles")
+
+    async def get_specific_reactionrole(self, msg_id, emoji):
+        return await self.one("SELECT * FROM reactionroles WHERE msg_id = ? and emoji = ?", (msg_id, emoji))
+
+    async def delete_rr(self, msg_id, emoji):
+        await self.exec("DELETE FROM reactionroles WHERE msg_id = ? and emoji = ?", (msg_id, emoji))
 
     ### --- COUNTING ---
     async def init_counting(self):

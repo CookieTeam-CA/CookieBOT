@@ -15,12 +15,12 @@ if __name__ == "__main__":
 
     bot.load_extension("bot.cogs.counting")
     bot.load_extension("bot.cogs.flagguess")
-    # bot.load_extension("bot.cogs.games")
     bot.load_extension("bot.cogs.guess_number")
     # bot.load_extension("bot.cogs.memes")
     bot.load_extension("bot.cogs.one_word")
     bot.load_extension("bot.cogs.temp_voice")
     bot.load_extension("bot.cogs.utility")
+    bot.load_extension("bot.cogs.reactionrole")
 
     bot.localize_commands(cmd_locales)
     bot.run(os.getenv("TOKEN"))
