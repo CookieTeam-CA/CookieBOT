@@ -116,8 +116,8 @@ class TempVoice(commands.Cog):
         channel = await guild.create_voice_channel(
             name=f"{member.display_name}'s Channel",
             category=category,
-            bitrate=96000,
-            user_limit=5,
+            bitrate=load_config("TEMP_VOICE", "defaultbitrate", "int"),
+            user_limit=load_config("TEMP_VOICE", "defaultmaxmembers", "int"),
             overwrites=overwrites,
             reason=f"TempVoice erstellt von {member.display_name}",
         )

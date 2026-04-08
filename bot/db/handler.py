@@ -89,6 +89,11 @@ class UserDB(ezcord.DBHandler):
         user_id INTEGER PRIMARY KEY,
         msg_count INTEGER DEFAULT 0,
         xp INTEGER DEFAULT 0)""")
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS voice_level (
+        user_id INTEGER PRIMARY KEY,
+        minutes INTEGER DEFAULT 0,
+        xp INTEGER DEFAULT 0)""")
         # Economy
         await self.exec("""
         CREATE TABLE IF NOT EXISTS economy (
@@ -102,6 +107,18 @@ class UserDB(ezcord.DBHandler):
             await cursor.exec("UPDATE economy SET cookies = cookies + ? WHERE user_id = ?", (cookies, user_id))
 
     ### --- LEVELS ---
+    async def add_voice_time(self, user_id, minutes, xp):
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO voice_level (user_id) VALUES (?)", (user_id,))
+            await cursor.exec(
+                "UPDATE voice_level SET minutes = minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, xp, user_id)
+            )
+
+    async def get_voice_stats(self, user_id):
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO voice_level (user_id) VALUES (?)", (user_id,))
+            return await self.one("SELECT * FROM voice_level WHERE user_id = ?", (user_id,))
+
     async def new_message(self, user_id, xp):
         async with self.start() as cursor:
             await cursor.exec("INSERT OR IGNORE INTO level (user_id) VALUES (?)", (user_id,))
