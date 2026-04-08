@@ -90,7 +90,7 @@ class Level(commands.Cog):
         lvl = Level.get_level(xp)
         return 100 + 75 * (lvl - 1)
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(minutes=1)
     async def voice_tick(self):
         for guild in self.bot.guilds:
             for vc in guild.voice_channels:
