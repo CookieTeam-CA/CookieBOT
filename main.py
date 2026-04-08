@@ -21,6 +21,7 @@ if __name__ == "__main__":
     bot.load_extension("bot.cogs.temp_voice")
     bot.load_extension("bot.cogs.utility")
     bot.load_extension("bot.cogs.reactionrole")
+    bot.load_extension("bot.cogs.level")
 
     bot.localize_commands(cmd_locales)
     bot.run(os.getenv("TOKEN"))

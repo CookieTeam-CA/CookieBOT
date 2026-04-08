@@ -31,6 +31,9 @@ en-US:
       emoji:
         name: emoji
         description: The emoji you want to use for the reaction role you want to delete.
+  list_reactionroles:
+    name: list_reactionroles
+    description: Lists all current active reactionroles.
 
   cogs:
     OneWordChallenge:
@@ -73,6 +76,9 @@ de:
       emoji:
         name: emoji
         description: Das Emoji zum reagieren für die Reactionrole die du löschen willst.
+  list_reactionroles:
+    name: reactionrole_liste
+    description: Listet alle aktiven Reactionroles auf.
 
   cogs:
     OneWordChallenge:

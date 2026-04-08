@@ -83,6 +83,35 @@ class UserDB(ezcord.DBHandler):
         msg_id INTEGER PRIMARY KEY,
         emoji STRING DEFAULT NULL,
         role_id INTEGER NOT NULL)""")
+        # Level
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS level (
+        user_id INTEGER PRIMARY KEY,
+        msg_count INTEGER DEFAULT 0,
+        xp INTEGER DEFAULT 0)""")
+        # Economy
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS economy (
+        user_id INTEGER PRIMARY KEY,
+        cookies INTEGER DEFAULT 0)""")
+
+    ### --- ECONOMY ---
+    async def add_cookies(self, user_id, cookies):
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO economy (user_id) VALUES (?)", (user_id,))
+            await cursor.exec("UPDATE economy SET cookies = cookies + ? WHERE user_id = ?", (cookies, user_id))
+
+    ### --- LEVELS ---
+    async def new_message(self, user_id, xp):
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO level (user_id) VALUES (?)", (user_id,))
+            await cursor.exec("UPDATE level SET xp = xp + ? WHERE user_id = ?", (xp, user_id))
+            await cursor.exec("UPDATE level SET msg_count = msg_count + 1 WHERE user_id = ?", (user_id,))
+
+    async def get_xp(self, user_id):
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO level (user_id) VALUES (?)", (user_id,))
+            return await self.one("SELECT xp FROM level WHERE user_id = ?", (user_id,))
 
     ### --- REACTIONROLES ---
     async def create_rr(self, msg_id, emoji, role_id):

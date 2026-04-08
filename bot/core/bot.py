@@ -17,7 +17,7 @@ os.makedirs("data", exist_ok=True)
 
 if not os.path.exists(".env"):
     with open(".env", "w", encoding="utf-8") as f:
-        f.write("TOKEN=\n")
+        f.write("TOKEN=\nERROR_WEBHOOK=\n")
 
 file_handler = RotatingFileHandler(filename="logs/bot.log", maxBytes=2 * 1024 * 1024, backupCount=10, encoding="utf-8")
 file_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)-8s | %(filename)s:%(lineno)d | %(message)s"))
@@ -37,6 +37,7 @@ class MyBot(ezcord.Bot):
             debug_guilds=None,
             ready_event=None,
             language="de",
+            error_webhook_url=os.getenv("ERROR_WEBHOOK"),
         )
         self.add_help_command()
         self._load_config()

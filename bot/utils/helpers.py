@@ -1,3 +1,4 @@
+import ast
 import configparser
 from contextlib import suppress
 from datetime import datetime
@@ -78,13 +79,17 @@ async def safe_unpin(message_id, channel, reason=None):
         await msg.unpin(reason=reason)
 
 
-def load_config(category, name, art: Literal["int", "str"]):
+def load_config(category, name, art: Literal["int", "str", "list"]):
     parser = configparser.ConfigParser()
     parser.read("config/config.cfg")
     try:
-        if art == "int":
-            return int(parser[category][name])
-        else:
-            return parser[category][name]
+        match art:
+            case "int":
+                return int(parser[category][name])
+            case "list":
+                return ast.literal_eval(parser[category][name])
+            case "str":
+                return parser[category][name]
+
     except (KeyError, ValueError):
         log.error(f"{category} {name} not found in config.cfg!")
