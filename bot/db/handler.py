@@ -1,3 +1,5 @@
+from typing import Literal
+
 import ezcord
 
 
@@ -114,21 +116,19 @@ class UserDB(ezcord.DBHandler):
                 "UPDATE voice_level SET minutes = minutes + ?, xp = xp + ? WHERE user_id = ?", (minutes, xp, user_id)
             )
 
-    async def get_voice_stats(self, user_id):
-        async with self.start() as cursor:
-            await cursor.exec("INSERT OR IGNORE INTO voice_level (user_id) VALUES (?)", (user_id,))
-            return await self.one("SELECT * FROM voice_level WHERE user_id = ?", (user_id,))
-
     async def new_message(self, user_id, xp):
         async with self.start() as cursor:
             await cursor.exec("INSERT OR IGNORE INTO level (user_id) VALUES (?)", (user_id,))
             await cursor.exec("UPDATE level SET xp = xp + ? WHERE user_id = ?", (xp, user_id))
             await cursor.exec("UPDATE level SET msg_count = msg_count + 1 WHERE user_id = ?", (user_id,))
 
-    async def get_xp(self, user_id):
+    async def get_level(self, user_id, table: Literal["level", "voice_level", "economy"]):
         async with self.start() as cursor:
-            await cursor.exec("INSERT OR IGNORE INTO level (user_id) VALUES (?)", (user_id,))
-            return await self.one("SELECT xp FROM level WHERE user_id = ?", (user_id,))
+            await cursor.exec(f"INSERT OR IGNORE INTO {table} (user_id) VALUES (?)", (user_id,))
+            return await cursor.one(f"SELECT * FROM {table} WHERE user_id = ?", (user_id,))
+
+    async def get_leaderboard(self, table: str, order_col: str, limit: int = 100):
+        return await self.all(f"SELECT * FROM {table} ORDER BY {order_col} DESC LIMIT ?", (limit,))
 
     ### --- REACTIONROLES ---
     async def create_rr(self, msg_id, emoji, role_id):
