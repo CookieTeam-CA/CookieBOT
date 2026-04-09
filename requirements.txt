@@ -12,7 +12,7 @@ aiosignal==1.4.0
     # via aiohttp
 aiosqlite==0.22.1
     # via ezcord
-attrs==25.4.0
+attrs==26.1.0
     # via aiohttp
 audioop-lts==0.2.2
     # via ezcord
