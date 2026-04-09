@@ -18,7 +18,7 @@ audioop-lts==0.2.2
     # via ezcord
 colorama==0.4.6
     # via ezcord
-ezcord==0.7.4
+ezcord==0.7.5
     # via cookiebot (pyproject.toml)
 frozenlist==1.8.0
     # via
