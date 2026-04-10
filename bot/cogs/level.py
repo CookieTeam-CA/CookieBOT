@@ -6,7 +6,7 @@ from discord.commands import Option, slash_command
 from discord.ext import commands, tasks
 from ezcord import log
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import load_config
 from bot.utils.pagination import EmbedPaginator, build_pages
 
@@ -60,6 +60,19 @@ class Level(commands.Cog):
     def progress_bar(current: int, total: int, length: int = 12) -> str:
         filled = int((current / total) * length)
         return "█" * filled + "░" * (length - filled)
+    
+    @staticmethod
+    def level_up_cookies(level: int) -> int:
+        if level <= 10:
+            return 20
+        elif level <= 25:
+            return 35
+        elif level <= 50:
+            return 60
+        elif level <= 75:
+            return 90
+        else:
+            return 130
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -78,15 +91,15 @@ class Level(commands.Cog):
         if message.channel.id in self.halfxpchannel:
             xp = xp // 2
 
-        await handler.db.new_message(message.author.id, xp)
+        await db.new_message(message.author.id, xp)
         log.debug(f"{message.author} + {xp} for message")
 
-        stats = await handler.db.get_level(message.author.id, "level")
+        stats = await db.get_level(message.author.id, "level")
 
         new_xp = stats[2]
         old_level = self.get_level(new_xp - xp)
         new_level = self.get_level(new_xp)
-        lvlcookies = new_level * 5
+        lvlcookies = Level.level_up_cookies(new_level)
 
         if old_level != new_level:
             embed = discord.Embed(
@@ -97,7 +110,7 @@ class Level(commands.Cog):
             )
             embed.set_thumbnail(url=message.author.display_avatar.url)
 
-            await handler.db.add_cookies(message.author.id, lvlcookies)
+            await db.add_cookies(message.author.id, lvlcookies)
             await message.channel.send(embed=embed)
 
     # --- VOICE XP ---
@@ -127,18 +140,17 @@ class Level(commands.Cog):
                     if vc.id in self.halfxpvoicechannel:
                         minutes_xp = minutes_xp // 2
 
-                    stats = await handler.db.get_level(member.id, "voice_level")
+                    stats = await db.get_level(member.id, "voice_level")
                     old_xp = stats[2]
 
-                    await handler.db.add_voice_time(member.id, minutes, minutes_xp)
-                    log.debug(f"{member} + {minutes_xp} for 1 min in talk")
+                    await db.add_voice_time(member.id, minutes, minutes_xp)
 
                     old_level = self.get_level(old_xp)
                     new_level = self.get_level(old_xp + minutes_xp)
 
                     if old_level != new_level:
-                        lvlcookies = new_level * 5
-                        await handler.db.add_cookies(member.id, lvlcookies)
+                        lvlcookies = Level.level_up_cookies(new_level)
+                        await db.add_cookies(member.id, lvlcookies)
 
                         embed = discord.Embed(
                             title="Voice Rangaufstieg",
@@ -152,7 +164,7 @@ class Level(commands.Cog):
                     await asyncio.sleep(0)
 
     # --- COMMANDS ---
-    @slash_command() # translation missing
+    @slash_command()
     async def rank(self, ctx, user: Option(discord.Member, required=False)):  # type: ignore
         if not user:
             user = ctx.author
@@ -161,9 +173,9 @@ class Level(commands.Cog):
             return
 
         await ctx.defer()
-        stats = await handler.db.get_level(user.id, "level")
-        voice_stats = await handler.db.get_level(user.id, "voice_level")
-        economy = await handler.db.get_level(user.id, "economy")
+        stats = await db.get_level(user.id, "level")
+        voice_stats = await db.get_level(user.id, "voice_level")
+        economy = await db.get_level(user.id, "economy")
 
         xp = stats[2]
         messages = stats[1]
@@ -209,17 +221,17 @@ class Level(commands.Cog):
         discord.OptionChoice("🔢 Counting", "counting"),
     ]
 
-    @slash_command() # translation missing
-    async def leaderboard(self, ctx, kategorie: Option(str, choices=LEADERBOARD_CATEGORIES)):  # type: ignore
+    @slash_command()
+    async def leaderboard(self, ctx, categorie: Option(str, choices=LEADERBOARD_CATEGORIES)):  # type: ignore
         await ctx.defer()
 
         guild_member_ids = {m.id for m in ctx.guild.members}
 
         async def get_filtered(table, order_col):
-            rows = await handler.db.get_leaderboard(table, order_col)
+            rows = await db.get_leaderboard(table, order_col)
             return [r for r in rows if r[0] in guild_member_ids]
 
-        if kategorie == "cookies":
+        if categorie == "cookies":
             rows = await get_filtered("economy", "cookies")
 
             def builder(i, chunk, embed):
@@ -230,7 +242,7 @@ class Level(commands.Cog):
 
             pages = build_pages(rows, title="🍪 Cookies Leaderboard", builder=builder, chunk_size=10)
 
-        elif kategorie == "messages":
+        elif categorie == "messages":
             rows = await get_filtered("level", "xp")
 
             def builder(i, chunk, embed):
@@ -246,7 +258,7 @@ class Level(commands.Cog):
 
             pages = build_pages(rows, title="💬 Nachrichten Leaderboard", builder=builder, chunk_size=10)
 
-        elif kategorie == "voice":
+        elif categorie == "voice":
             rows = await get_filtered("voice_level", "xp")
 
             def builder(i, chunk, embed):
@@ -264,7 +276,7 @@ class Level(commands.Cog):
 
             pages = build_pages(rows, title="🎙️ Voice Leaderboard", builder=builder, chunk_size=10)
 
-        elif kategorie == "gtn":
+        elif categorie == "gtn":
             rows = await get_filtered("gtn_stats", "wins")
 
             def builder(i, chunk, embed):
@@ -280,7 +292,7 @@ class Level(commands.Cog):
 
             pages = build_pages(rows, title="🔢 Guess the Number Leaderboard", builder=builder, chunk_size=10)
 
-        elif kategorie == "flags":
+        elif categorie == "flags":
             rows = await get_filtered("flag_stats", "wins")
 
             def builder(i, chunk, embed):
@@ -296,7 +308,7 @@ class Level(commands.Cog):
 
             pages = build_pages(rows, title="🏳️ Flag Stats Leaderboard", builder=builder, chunk_size=10)
 
-        elif kategorie == "counting":
+        elif categorie == "counting":
             rows = await get_filtered("counting_stats", "counts")
 
             def builder(i, chunk, embed):

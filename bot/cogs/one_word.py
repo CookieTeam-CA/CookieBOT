@@ -8,7 +8,7 @@ from discord.ext import commands
 from ezcord import log
 from ezcord.internal.dc import slash_command
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import load_config, safe_delete
 from bot.utils.pagination import EmbedPaginator, build_pages
 
@@ -26,7 +26,7 @@ class OneWordChallenge(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        last_game_state = await handler.db.get_latest_row("one_word", "id")
+        last_game_state = await db.get_latest_row("one_word", "id")
 
         if last_game_state and last_game_state[3] == 0:
             self.id = last_game_state[0]
@@ -66,9 +66,9 @@ class OneWordChallenge(commands.Cog):
 
             if self.id is None:
                 self.id = int(time.time() * 1000)
-                await handler.db.new_row_one_word(self.id, json.dumps(self.words), self.last_author)
+                await db.new_row_one_word(self.id, json.dumps(self.words), self.last_author)
             else:
-                await handler.db.update_one_word(json.dumps(self.words), self.last_author, self.id, 0)
+                await db.update_one_word(json.dumps(self.words), self.last_author, self.id, 0)
 
             await message.add_reaction("✅")
 
@@ -78,7 +78,7 @@ class OneWordChallenge(commands.Cog):
                 )
                 embed.set_footer(text="Nutze /one_word_list um vorherige Sätze anzuschauen!")
                 await message.channel.send(embed=embed)
-                await handler.db.update_one_word(json.dumps(self.words), self.last_author, self.id, 1)
+                await db.update_one_word(json.dumps(self.words), self.last_author, self.id, 1)
                 self.id = None
                 self.words = []
         else:
@@ -90,7 +90,7 @@ class OneWordChallenge(commands.Cog):
     @slash_command()
     async def one_word_list(self, ctx):
         await ctx.defer()
-        data = await handler.db.get_finished_games()
+        data = await db.get_finished_games()
 
         if not data:
             return await ctx.respond("Es wurden noch keine Sätze vervollständigt.", ephemeral=True)

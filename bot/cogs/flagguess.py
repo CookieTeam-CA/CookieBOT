@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from ezcord import log
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import load_config, safe_embed_channel_send
 
 
@@ -241,11 +241,11 @@ class FlagGuessingCog(commands.Cog):
         if message.author == self.bot.user:
             return
         if message.channel.id == self.channel and self.current_flag is not None:
-            await handler.db.insert_user("flag_stats", "user_id", message.author.id)
+            await db.insert_user("flag_stats", "user_id", message.author.id)
 
             if message.content.lower() in [name.lower() for name in self.flag_dict[self.current_flag]]:
-                await handler.db.update_flag_stats(message.author.id, True)
-                result = await handler.db.get_one_row("flag_stats", "user_id", message.author.id)
+                await db.update_flag_stats(message.author.id, True)
+                result = await db.get_one_row("flag_stats", "user_id", message.author.id)
                 embed = discord.Embed(
                     title="Richtig!",
                     description=f"**{message.author.mention}** hat die Flagge **{message.content}** richtig erraten.",
@@ -263,8 +263,8 @@ class FlagGuessingCog(commands.Cog):
                 await self.start_new_game()
             else:
                 await message.add_reaction("❌")
-                result = await handler.db.get_one_row("flag_stats", "user_id", message.author.id)
-                await handler.db.update_flag_stats(message.author.id, False)
+                result = await db.get_one_row("flag_stats", "user_id", message.author.id)
+                await db.update_flag_stats(message.author.id, False)
 
                 embed = discord.Embed(
                     title="Streak kaputt!",

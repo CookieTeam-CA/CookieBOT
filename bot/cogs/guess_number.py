@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from ezcord import log
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import load_config, safe_delete, safe_embed_channel_send, safe_pin, safe_unpin
 
 
@@ -53,7 +53,7 @@ class GuessNumber(commands.Cog):
 
         self.last_game_message = self.last_game_message.id
 
-        await handler.db.new_gtn_game(self.id, self.number1, self.number2, self.number, self.last_game_message)
+        await db.new_gtn_game(self.id, self.number1, self.number2, self.number, self.last_game_message)
 
         async for message in self.bot.get_channel(self.channel).history(limit=1):
             if message.type == discord.MessageType.pins_add:
@@ -63,7 +63,7 @@ class GuessNumber(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        last_game_row = await handler.db.get_latest_row("gtn_save", "id")
+        last_game_row = await db.get_latest_row("gtn_save", "id")
 
         if last_game_row is None or last_game_row[5] == 1:
             await self.new_game()
@@ -87,13 +87,13 @@ class GuessNumber(commands.Cog):
         except ValueError:
             return
 
-        await handler.db.add_smth_and_insert("gtn_stats", "user_id", message.author.id, "guess", 1)
+        await db.add_smth_and_insert("gtn_stats", "user_id", message.author.id, "guess", 1)
 
         if guess == self.number:
             self.race_condition = True
-            await handler.db.add_smth("gtn_stats", "wins", 1, "user_id", message.author.id)
+            await db.add_smth("gtn_stats", "wins", 1, "user_id", message.author.id)
 
-            result = await handler.db.get_one_row("gtn_stats", "user_id", message.author.id)
+            result = await db.get_one_row("gtn_stats", "user_id", message.author.id)
             wins = result[1]
             guesses = result[2]
             winrate = round((wins / guesses) * 100 if guesses > 0 else 0)
@@ -105,7 +105,7 @@ class GuessNumber(commands.Cog):
             )
             embed.set_footer(text=f"Du hast eine Gewinnchance von {round(winrate, 2)}%.")
             await safe_embed_channel_send(self.bot, self.channel, embed=embed)
-            await handler.db.set_smth("gtn_save", "done", 1, "id", self.id)
+            await db.set_smth("gtn_save", "done", 1, "id", self.id)
 
             if self.last_game_message:
                 await safe_unpin(self.last_game_message, message.channel)

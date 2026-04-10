@@ -5,7 +5,7 @@ import simpleeval
 from discord.ext import commands
 from ezcord import log
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import load_config
 
 
@@ -21,9 +21,9 @@ class CountingCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await handler.db.init_counting()
+        await db.init_counting()
 
-        state = await handler.db.get_counting_state()
+        state = await db.get_counting_state()
         if state:
             self.count = state[0]
 
@@ -60,7 +60,7 @@ class CountingCog(commands.Cog):
             if result == self.count + 1:
                 self.count += 1
                 self.previous_author_id = message.author.id
-                await handler.db.update_counting(self.count, message.author.id)
+                await db.update_counting(self.count, message.author.id)
                 await message.add_reaction("✅")
 
                 if self.count == 67:
@@ -74,11 +74,11 @@ class CountingCog(commands.Cog):
                 await self.fail_game(message, embed)
 
     async def fail_game(self, message, embed):
-        highscore = await handler.db.get_counting_state()
+        highscore = await db.get_counting_state()
 
         self.count = 0
         self.previous_author_id = None
-        await handler.db.update_counting(0, message.author.id, fail=1)
+        await db.update_counting(0, message.author.id, fail=1)
 
         await message.add_reaction("❌")
         await message.channel.send(embed=embed)

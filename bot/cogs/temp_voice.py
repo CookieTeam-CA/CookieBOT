@@ -7,7 +7,7 @@ import discord
 from ezcord import log
 from ezcord.internal.dc import commands
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import load_config
 from bot.utils.temp_voice_ui import (
     LimitModal,
@@ -48,7 +48,7 @@ class TempVoice(commands.Cog):
         log.info("tempvoice.py is ready")
 
     async def _restore_state(self) -> None:
-        rows = await handler.db.get_all_temp_channels()
+        rows = await db.get_all_temp_channels()
         if not rows:
             return
 
@@ -58,7 +58,7 @@ class TempVoice(commands.Cog):
             channel = self.bot.get_channel(cid)
 
             if not channel:
-                await handler.db.delete_temp_channel(cid)
+                await db.delete_temp_channel(cid)
                 continue
 
             owner_id = row[1]
@@ -130,7 +130,7 @@ class TempVoice(commands.Cog):
         view = discord.ui.DesignerView(*components)
         panel_msg = await channel.send(view=view)
         self._panel_messages[channel.id] = panel_msg
-        await handler.db.create_temp_channel(channel.id, member.id, panel_msg.id)
+        await db.create_temp_channel(channel.id, member.id, panel_msg.id)
         await channel.move(beginning=True, offset=2)
         log.info(f"Channel created: {channel.name} (Owner: {member})")
 
@@ -142,9 +142,9 @@ class TempVoice(commands.Cog):
         with suppress(discord.NotFound, discord.Forbidden):
             await channel.delete(reason="TempVoice gelöscht weil Channel leer")
 
-        await handler.db.delete_temp_channel(cid)
-        await handler.db.cleanup_bans(cid)
-        await handler.db.cleanup_whitelist(cid)
+        await db.delete_temp_channel(cid)
+        await db.cleanup_bans(cid)
+        await db.cleanup_whitelist(cid)
         await self._delete_panel(cid)
         log.info(f"Channel deleted: {channel.name}")
 
@@ -158,7 +158,7 @@ class TempVoice(commands.Cog):
         await channel.set_permissions(new_owner, **OWNER_OVERWRITE._values)
 
         self._channel_owners[channel.id] = new_owner.id
-        await handler.db.change_owner(channel.id, new_owner.id)
+        await db.change_owner(channel.id, new_owner.id)
         await self._edit_panel(channel)
 
         log.info(f"Ownership: {channel.name} -> {new_owner.display_name}")
@@ -316,7 +316,7 @@ class TempVoice(commands.Cog):
             with suppress(discord.Forbidden, discord.HTTPException):
                 await target.move_to(None)
 
-        await handler.db.add_ban(channel.id, target_id)
+        await db.add_ban(channel.id, target_id)
         await interaction.response.send_message(
             f"{target.mention} wurde gebannt und kann dem Channel nicht mehr betreten.", ephemeral=True
         )
@@ -363,13 +363,13 @@ class TempVoice(commands.Cog):
         await interaction.response.send_message(f"Alle Mitglieder wurden **{label}**{note}.", ephemeral=True)
 
     async def _act_bans(self, interaction: discord.Interaction, channel: discord.VoiceChannel) -> None:
-        bans = await handler.db.get_bans(channel.id)
+        bans = await db.get_bans(channel.id)
 
         if not bans:
             await interaction.response.send_message("Keine gebannten User für diesen Channel.", ephemeral=True)
             return
 
-        view = UnbanView(channel, bans, handler.db, self._edit_panel)
+        view = UnbanView(channel, bans, db, self._edit_panel)
         names = []
         for row in bans:
             m = interaction.guild.get_member(row[1])
@@ -391,10 +391,10 @@ class TempVoice(commands.Cog):
             )
             return
 
-        whitelist = await handler.db.get_whitelist(channel.id)
+        whitelist = await db.get_whitelist(channel.id)
         whitelisted_ids = [row[1] for row in whitelist] if whitelist else []
 
-        view = WhitelistView(channel, whitelisted_ids, handler.db, self._edit_panel)
+        view = WhitelistView(channel, whitelisted_ids, db, self._edit_panel)
 
         wl_str = (
             "\n".join(

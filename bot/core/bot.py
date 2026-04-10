@@ -9,7 +9,7 @@ import discord
 import ezcord
 from ezcord import log
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import greeter_builder, safe_add_role, safe_embed_channel_send
 
 os.makedirs("logs", exist_ok=True)
@@ -64,7 +64,7 @@ class MyBot(ezcord.Bot):
             sys.exit(1)
 
     async def on_ready(self):
-        await handler.db.setup()
+        await db.setup()
         print("System is up and running.")
 
     async def on_member_join(self, member: discord.Member):

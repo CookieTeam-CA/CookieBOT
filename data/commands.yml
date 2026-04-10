@@ -34,6 +34,20 @@ en-US:
   list_reactionroles:
     name: list_reactionroles
     description: Lists all current active reactionroles.
+  rank:
+    name: rank
+    description: Shows the current level progress of a User.
+    options:
+      user:
+        name: user
+        description: From which user do you want to see the level progress?
+  leaderboard:
+    name: leaderboard
+    description: Shows different leaderboards from this Server.
+    options:
+      categorie:
+        name: type
+        description: Which leaderboard do you want to see?
 
   cogs:
     OneWordChallenge:
@@ -79,6 +93,20 @@ de:
   list_reactionroles:
     name: reactionrole_liste
     description: Listet alle aktiven Reactionroles auf.
+  rank:
+    name: rang
+    description: Zeigt den Level Fortschritt eines Users.
+    options:
+      user:
+        name: user
+        description: Von welchem User möchtest du den Level Fortschritt sehen?
+  leaderboard:
+    name: bestenliste
+    description: Zeigt verschiedene Bestenlisten des Servers.
+    options:
+      categorie:
+        name: kategorie
+        description: Welche Bestenliste möchtest du sehen?
 
   cogs:
     OneWordChallenge:

@@ -4,7 +4,7 @@ from discord.ext import commands
 from ezcord import log
 from ezcord.internal.dc import slash_command
 
-from bot.db import handler
+from bot.db.handler import db
 from bot.utils.helpers import load_config
 from bot.utils.pagination import EmbedPaginator, build_pages
 
@@ -31,7 +31,7 @@ class ReactionRole(commands.Cog):
         except ValueError:
             return await ctx.respond(embed=self.error_embed("Ungültige Message ID."), ephemeral=True)
 
-        exists = await handler.db.get_specific_reactionrole(msg_id, emoji)
+        exists = await db.get_specific_reactionrole(msg_id, emoji)
         if exists:
             return await ctx.respond(
                 "Reactionrole auf dieser Nachricht mit diesem Emoji existiert bereits.",
@@ -43,7 +43,7 @@ class ReactionRole(commands.Cog):
         except Exception as e:
             return await ctx.respond(embed=self.error_embed(e), ephemeral=True)
 
-        await handler.db.create_rr(msg_id, emoji, role.id)
+        await db.create_rr(msg_id, emoji, role.id)
         await ctx.respond(
             f"Reactionrole erstellt mit dem Emoji {emoji} der Role {role.mention} auf der Nachricht `{msg_id}`",
             ephemeral=True,
@@ -59,7 +59,7 @@ class ReactionRole(commands.Cog):
 
         try:
             message = await ctx.channel.fetch_message(msg_id)
-            await handler.db.delete_rr(msg_id, emoji)
+            await db.delete_rr(msg_id, emoji)
             await message.remove_reaction(emoji, self.bot.user)
         except Exception as e:
             return await ctx.respond(embed=self.error_embed(e), ephemeral=True)
@@ -72,7 +72,7 @@ class ReactionRole(commands.Cog):
     @slash_command()
     @commands.has_permissions(administrator=True)
     async def list_reactionroles(self, ctx):
-        data = await handler.db.get_reactionroles()
+        data = await db.get_reactionroles()
 
         if not data:
             return await ctx.respond("Keine Reaction Roles vorhanden.", ephemeral=True)
@@ -94,7 +94,7 @@ class ReactionRole(commands.Cog):
         if payload.user_id == self.bot.user.id:
             return
         try:
-            row = await handler.db.get_specific_reactionrole(payload.message_id, payload.emoji.name)
+            row = await db.get_specific_reactionrole(payload.message_id, payload.emoji.name)
         except Exception:
             return
         if not row:
@@ -109,7 +109,7 @@ class ReactionRole(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         try:
-            row = await handler.db.get_specific_reactionrole(payload.message_id, payload.emoji.name)
+            row = await db.get_specific_reactionrole(payload.message_id, payload.emoji.name)
         except Exception:
             return
         if not row:
