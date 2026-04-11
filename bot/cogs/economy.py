@@ -24,7 +24,7 @@ class Economy(commands.Cog):
         base = random.randint(20, 35)
         streak_bonus = max(0, min((streak - 1) * 3, 45))
         cookies = base + streak_bonus
-        
+
         data = await db.redeem_daily(ctx.author.id, cookies)
         typ = data[0]
         streak = data[1]

@@ -114,7 +114,9 @@ class UserDB(ezcord.DBHandler):
     async def redeem_daily(self, user_id, cookies):
         async with self.start() as cursor:
             await cursor.exec("INSERT OR IGNORE INTO daily (user_id) VALUES (?)", (user_id,))
-            daily_stats = await cursor.one("SELECT last_claimed, streak, claimed FROM daily WHERE user_id = ?", (user_id,)) # noqa: E501
+            daily_stats = await cursor.one(
+                "SELECT last_claimed, streak, claimed FROM daily WHERE user_id = ?", (user_id,)
+            )
             streak = daily_stats[1]
             claimed = daily_stats[2]
             last_claimed = datetime.fromisoformat(daily_stats[0]).date()
@@ -123,16 +125,21 @@ class UserDB(ezcord.DBHandler):
             if last_claimed == today:
                 return 0, streak, claimed, last_claimed
             elif last_claimed == today - timedelta(days=1):
-                await cursor.exec("UPDATE daily SET last_claimed = ?, streak = streak + 1, claimed = claimed + 1 WHERE user_id = ?", (today.isoformat(), user_id)) # noqa: E501
+                await cursor.exec(
+                    "UPDATE daily SET last_claimed = ?, streak = streak + 1, claimed = claimed + 1 WHERE user_id = ?",
+                    (today.isoformat(), user_id),
+                )
                 await cursor.exec("UPDATE economy SET cookies = cookies + ? WHERE user_id = ?", (cookies, user_id))
                 return 1, streak + 1, claimed + 1, last_claimed
             else:
-                await cursor.exec("UPDATE daily SET last_claimed = ?, streak = 1, claimed = claimed + 1 WHERE user_id = ?", (today.isoformat(), user_id)) # noqa: E501
+                await cursor.exec(
+                    "UPDATE daily SET last_claimed = ?, streak = 1, claimed = claimed + 1 WHERE user_id = ?",
+                    (today.isoformat(), user_id),
+                )
                 await cursor.exec("UPDATE economy SET cookies = cookies + ? WHERE user_id = ?", (cookies, user_id))
                 if last_claimed.isoformat() == "1970-01-01":
                     return 1, 1, claimed + 1, last_claimed
                 return 2, 1, claimed + 1, last_claimed
-            
 
     ### --- ECONOMY ---
     async def add_cookies(self, user_id, cookies):
@@ -144,7 +151,7 @@ class UserDB(ezcord.DBHandler):
         async with self.start() as cursor:
             result = await cursor.exec(
                 "UPDATE economy SET cookies = cookies - ? WHERE user_id = ? AND cookies >= ?",
-                (cookies, user_id, cookies)
+                (cookies, user_id, cookies),
             )
 
             return result.rowcount  # 1 = erfolgreich, 0 = nicht genug cookies

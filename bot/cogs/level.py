@@ -60,7 +60,7 @@ class Level(commands.Cog):
     def progress_bar(current: int, total: int, length: int = 12) -> str:
         filled = int((current / total) * length)
         return "█" * filled + "░" * (length - filled)
-    
+
     @staticmethod
     def level_up_cookies(level: int) -> int:
         if level <= 10:
