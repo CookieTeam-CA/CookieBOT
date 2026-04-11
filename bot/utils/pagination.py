@@ -7,8 +7,6 @@ import discord
 
 
 class PaginatorButton(discord.ui.Button):
-    """Ein einzelner Paginator-Button."""
-
     def __init__(
         self,
         label: str,

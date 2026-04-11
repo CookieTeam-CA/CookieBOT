@@ -140,6 +140,15 @@ class UserDB(ezcord.DBHandler):
             await cursor.exec("INSERT OR IGNORE INTO economy (user_id) VALUES (?)", (user_id,))
             await cursor.exec("UPDATE economy SET cookies = cookies + ? WHERE user_id = ?", (cookies, user_id))
 
+    async def remove_cookies(self, user_id, cookies):
+        async with self.start() as cursor:
+            result = await cursor.exec(
+                "UPDATE economy SET cookies = cookies - ? WHERE user_id = ? AND cookies >= ?",
+                (cookies, user_id, cookies)
+            )
+
+            return result.rowcount  # 1 = erfolgreich, 0 = nicht genug cookies
+
     ### --- LEVELS ---
     async def add_voice_time(self, user_id, minutes, xp):
         async with self.start() as cursor:

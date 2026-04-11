@@ -155,11 +155,11 @@ class Level(commands.Cog):
                         embed = discord.Embed(
                             title="Voice Rangaufstieg",
                             color=discord.Color.random(),
-                            description=f"Herzlichen Glückwunsch {member.mention} du hast Level **{new_level} ** "
-                            f"erreicht! Du bekommst **{lvlcookies}** Cookies als Geschenk!",
+                            description=f"Herzlichen Glückwunsch du hast Level **{new_level} ** erreicht! "
+                            f"Du bekommst **{lvlcookies}** Cookies als Geschenk!",
                         )
                         embed.set_thumbnail(url=member.display_avatar.url)
-                        await self.bot.get_channel(self.voicelvl_announce).send(embed=embed)
+                        await vc.send(member.mention, embed=embed)
 
                     await asyncio.sleep(0)
 

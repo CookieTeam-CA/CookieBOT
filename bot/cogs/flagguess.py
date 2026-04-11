@@ -2,11 +2,27 @@ import asyncio
 import random
 
 import discord
+from discord.commands import slash_command
 from discord.ext import commands
 from ezcord import log
 
 from bot.db.handler import db
 from bot.utils.helpers import load_config, safe_embed_channel_send
+
+
+class SkipButton(discord.ui.View):
+    def __init__(self, cog):
+        super().__init__()
+        self.cog = cog
+
+    @discord.ui.button(label="Flagge Überspringen", style=discord.ButtonStyle.primary)
+    async def button_callback(self, button, interaction):
+        res = await db.remove_cookies(interaction.user.id, 5)
+        if res == 0:
+            return await interaction.respond("Du hast nicht genügend Cookies.", ephemeral=True)
+
+        await interaction.respond(f"Die Flagge wurde von {interaction.user.mention} übersprungen.")
+        await self.cog.start_new_game(0)
 
 
 class FlagGuessingCog(commands.Cog):
@@ -221,12 +237,13 @@ class FlagGuessingCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.start_new_game()
+        await self.start_new_game(0)
         log.info("flagguess.py is ready")
 
-    async def start_new_game(self):
-        await asyncio.sleep(10)
+    async def start_new_game(self, sleep):
+        await asyncio.sleep(sleep)
         self.cooldown = False
+        self.count = 0
         self.current_flag = random.choice(list(self.flag_dict.keys()))
         log.debug(f"the flag is {self.current_flag}")
         file = discord.File(f"assets/flags/{self.current_flag}" + ".png", filename="flag.png")
@@ -260,7 +277,7 @@ class FlagGuessingCog(commands.Cog):
                 await message.add_reaction("✅")
                 await safe_embed_channel_send(self.bot, message.channel.id, embed=embed)
                 self.cooldown = True
-                await self.start_new_game()
+                await self.start_new_game(10)
             else:
                 await message.add_reaction("❌")
                 result = await db.get_one_row("flag_stats", "user_id", message.author.id)
@@ -274,13 +291,24 @@ class FlagGuessingCog(commands.Cog):
                 if result[3] > 2:
                     await safe_embed_channel_send(self.bot, message.channel.id, embed=embed)
 
-                # self.count += 1
-                # if self.count == 5:
-                #    await message.channel.send("Du kannst /skip benutzen, um die Flagge zu überspringen.")
-                #    self.count = 0
+                self.count += 1
+                if self.count == 5:
+                    self.count = 0
+                    embed = discord.Embed(
+                        title="Flagge Überspringen?",
+                        description="Möchtest du die Flagge für **5 Cookies** überspringen?",
+                        color=discord.Color.nitro_pink(),
+                    )
+                    embed.set_footer(text="Du kannst die Flagge jederzeit mit /skip überspringen.")
+                    await message.channel.send(embed=embed, view=SkipButton(self))
 
-
-# add /skip command
+    @slash_command()
+    async def flag_skip(self, ctx):
+        await ctx.respond(
+            "Bist du dir sicher das du die Flagge für **5 Cookies** überspringen willst?",
+            view=SkipButton(self),
+            ephemeral=True,
+        )
 
 
 def setup(bot):

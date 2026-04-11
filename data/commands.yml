@@ -48,6 +48,9 @@ en-US:
       categorie:
         name: type
         description: Which leaderboard do you want to see?
+  flag_skip:
+    name: skip_flag
+    description: Skip the current flag in guess the flag.
 
   cogs:
     OneWordChallenge:
@@ -107,6 +110,9 @@ de:
       categorie:
         name: kategorie
         description: Welche Bestenliste möchtest du sehen?
+  flag_skip:
+    name: flagge_ueberspringen
+    description: Überspringt die aktuelle Flagge in Flaggenerraten.
 
   cogs:
     OneWordChallenge:
