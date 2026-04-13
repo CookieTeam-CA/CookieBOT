@@ -19,6 +19,8 @@ class Economy(commands.Cog):
 
     @slash_command()
     async def daily(self, ctx):
+        log.info(f"{ctx.author} used /daily")
+
         streak_data = await db.get_one_row("daily", "user_id", ctx.author.id)
         streak = streak_data[1] if streak_data else 0
         base = random.randint(20, 35)
@@ -77,6 +79,31 @@ class Economy(commands.Cog):
             embed.set_footer(text="Komm morgen wieder, um deinen Streak aufzubauen!")
             embed.set_thumbnail(url=ctx.author.display_avatar.url)
             return await ctx.respond(embed=embed)
+
+    @slash_command()
+    @commands.cooldown(2, 120)
+    async def gift(self, ctx, user: discord.Member, cookies: int):
+        log.info(f"{ctx.author} used /gift")
+
+        if user.bot:
+            return await ctx.respond("Du kannst einem Bot keine Cookies schenken :(", ephemeral=True)
+
+        res = await db.remove_cookies(ctx.author.id, cookies)
+        if res == 0:
+            return await ctx.respond("Du hast nicht genügend Cookies.", ephemeral=True)
+
+        await db.add_cookies(user.id, cookies)
+        embed = discord.Embed(
+            title="Cookies erfolgreich verschenkt!",
+            description=f"Du hast {user.mention} erfolgreich **{cookies} Cookies** geschenkt!",
+            color=discord.Color.green(),
+        )
+        await ctx.respond(embed=embed)
+        try:
+            if await db.get_setting(user.id, "dm") != 0:
+                await user.send(f"Du hast von {ctx.author.mention} **{cookies} Cookies** erhalten.", silent=True)
+        except Exception:
+            return None
 
 
 def setup(bot):

@@ -89,6 +89,7 @@ class OneWordChallenge(commands.Cog):
 
     @slash_command()
     async def one_word_list(self, ctx):
+        log.info(f"{ctx.author} used /one_word_list")
         await ctx.defer()
         data = await db.get_finished_games()
 

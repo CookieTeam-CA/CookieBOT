@@ -51,6 +51,19 @@ en-US:
   flag_skip:
     name: skip_flag
     description: Skip the current flag in guess the flag.
+  gift:
+    name: gift
+    description: Gift Cookies to another User.
+    options:
+      user:
+        name: user
+        description: To which user do you want to gift cookies?
+      cookies:
+        name: cookies
+        descirption: How mouch cookies do you want to gift?
+  settings:
+    name: settings
+    description: Enable oder disable features for you personaly.
 
   cogs:
     OneWordChallenge:
@@ -98,11 +111,11 @@ de:
     description: Listet alle aktiven Reactionroles auf.
   rank:
     name: rang
-    description: Zeigt den Level Fortschritt eines Users.
+    description: Zeigt den Level Fortschritt eines Nutzers.
     options:
       user:
         name: user
-        description: Von welchem User möchtest du den Level Fortschritt sehen?
+        description: Von welchem Nutzer möchtest du den Level Fortschritt sehen?
   leaderboard:
     name: bestenliste
     description: Zeigt verschiedene Bestenlisten des Servers.
@@ -113,6 +126,19 @@ de:
   flag_skip:
     name: flagge_ueberspringen
     description: Überspringt die aktuelle Flagge in Flaggenerraten.
+  gift:
+    name: verschenken
+    description: Verschenke Cookies an einen anderen Nutzer
+    options:
+      user:
+        name: nutzer
+        description: An welchen Nutzer möchtest du Cookies verschenken?
+      cookies:
+        name: cookies
+        description: Wie viele Cookies möchtest du verschenken?
+  settings:
+    name: einstellungen
+    description: Schalte Features für dich persönlich an oder aus.
 
   cogs:
     OneWordChallenge:

@@ -5,6 +5,48 @@ from discord import Option, slash_command
 from ezcord import log
 from ezcord.internal.dc import commands
 
+from bot.db.handler import db
+
+
+class SettingButtons(discord.ui.View):
+    def __init__(self, cog):
+        super().__init__()
+        self.cog = cog
+        self.scse = discord.Embed(
+            title="Erfolgreich geändert!",
+            description="Die Einstellung wurde erfolgreich geändert",
+            color=discord.Color.green(),
+        )
+        self.suse = discord.Embed(
+            title="Nichts verändert.",
+            description="Die Einstellung wurde nicht verändert da sie bereits so eingestellt ist.",
+            color=discord.Color.light_gray(),
+        )
+
+    @discord.ui.button(label="Pings An", style=discord.ButtonStyle.green, row=0)
+    async def button_callback0(self, button, interaction):
+        embed = self.scse if await db.change_setting(interaction.user.id, "ping", 1) == 1 else self.suse
+
+        await interaction.respond(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="Pings Aus", style=discord.ButtonStyle.red, row=0)
+    async def button_callback1(self, button, interaction):
+        embed = self.scse if await db.change_setting(interaction.user.id, "ping", 0) == 1 else self.suse
+
+        await interaction.respond(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="Direkt Nachrichten An", style=discord.ButtonStyle.green, row=1)
+    async def button_callback2(self, button, interaction):
+        embed = self.scse if await db.change_setting(interaction.user.id, "dm", 1) == 1 else self.suse
+
+        await interaction.respond(embed=embed, ephemeral=True)
+
+    @discord.ui.button(label="Direkt Nachrichten Aus", style=discord.ButtonStyle.red, row=1)
+    async def button_callback3(self, button, interaction):
+        embed = self.scse if await db.change_setting(interaction.user.id, "dm", 0) == 1 else self.suse
+
+        await interaction.respond(embed=embed, ephemeral=True)
+
 
 class Utility(commands.Cog):
     def __init__(self, bot):
@@ -15,8 +57,8 @@ class Utility(commands.Cog):
         log.info("utility.py is ready")
 
     @slash_command()
-    async def avatar(self, ctx, user: Option(discord.Member, required=False)):
-        log.debug(f"{ctx.author.name} used /avatar")
+    async def avatar(self, ctx, user: Option(discord.Member, required=False)):  # type: ignore
+        log.info(f"{ctx.author} used /avatar")
 
         if not user:
             user = ctx.author
@@ -36,8 +78,8 @@ class Utility(commands.Cog):
     async def mc_skin(
         self,
         ctx,
-        username: Option(str, "Minecraft Benutzername"),
-        render: Option(
+        username: Option(str, "Minecraft Benutzername"),  # type: ignore
+        render: Option(  # type: ignore
             str,
             "Wähle die Pose",
             required=False,
@@ -70,7 +112,7 @@ class Utility(commands.Cog):
             default="default",
         ),
     ):
-        log.debug(f"{ctx.author.name} used /mc_skin")
+        log.info(f"{ctx.author} used /mc_skin")
         await ctx.defer()
 
         if username != urllib.parse.quote(username):
@@ -88,6 +130,16 @@ class Utility(commands.Cog):
         view.add_item(discord.ui.Button(label="Download Render", url=render_url))
 
         await ctx.respond(embed=embed, view=view)
+
+    @slash_command()
+    async def settings(self, ctx):  # type: ignore
+        log.info(f"{ctx.author} used /settings")
+        embed = discord.Embed(
+            title="Einstellungen",
+            description="Hier kannst eigene Einstellungen im bezug zum Bot treffen.",
+            color=discord.Color.blurple(),
+        )
+        await ctx.respond(embed=embed, view=SettingButtons(self))
 
 
 def setup(bot):

@@ -304,6 +304,7 @@ class FlagGuessingCog(commands.Cog):
 
     @slash_command()
     async def flag_skip(self, ctx):
+        log.info(f"{ctx.author} used /flag_skip")
         await ctx.respond(
             "Bist du dir sicher das du die Flagge für **5 Cookies** überspringen willst?",
             view=SkipButton(self),

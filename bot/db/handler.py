@@ -109,6 +109,26 @@ class UserDB(ezcord.DBHandler):
         streak INTEGER DEFAULT 0,
         claimed INTEGER DEFAULT 0,
         last_claimed TEXT DEFAULT '1970-01-01')""")
+        # Settings
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS settings (
+        user_id INTEGER PRIMARY KEY,
+        dm INTEGER DEFAULT 1,
+        ping INTEGER DEFAULT 1)""")  # 1 = ping bzw dm senden
+
+    ### --- SETTINGS ---
+    async def change_setting(self, user_id, setting, to):  # 0 nicht geändert da schon so ist, 1 = erfolgreich geändert
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO settings (user_id) VALUES (?)", (user_id,))
+            current_setting = await cursor.one(f"SELECT {setting} FROM settings WHERE user_id = ?", (user_id,))
+            if current_setting == to:
+                return 0
+
+            await cursor.exec(f"UPDATE settings SET {setting} = ? WHERE user_id = ?", (to, user_id))
+            return 1
+
+    async def get_setting(self, user_id, setting):
+        return await self.one(f"SELECT {setting} FROM settings WHERE user_id = ?", (user_id,))
 
     ### --- DAILY ---
     async def redeem_daily(self, user_id, cookies):

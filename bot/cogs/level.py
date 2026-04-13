@@ -111,7 +111,7 @@ class Level(commands.Cog):
             embed.set_thumbnail(url=message.author.display_avatar.url)
 
             await db.add_cookies(message.author.id, lvlcookies)
-            await message.channel.send(embed=embed)
+            await message.channel.send(embed=embed, silent=True)
 
     # --- VOICE XP ---
     def voice_time_to_xp(self, minutes: int) -> int:
@@ -155,17 +155,22 @@ class Level(commands.Cog):
                         embed = discord.Embed(
                             title="Voice Rangaufstieg",
                             color=discord.Color.random(),
-                            description=f"Herzlichen Glückwunsch du hast Level **{new_level} ** erreicht! "
-                            f"Du bekommst **{lvlcookies}** Cookies als Geschenk!",
+                            description=f"Herzlichen Glückwunsch {member.mention} du hast Level **{new_level} ** "
+                            f"erreicht! Du bekommst **{lvlcookies}** Cookies als Geschenk!",
                         )
                         embed.set_thumbnail(url=member.display_avatar.url)
-                        await vc.send(member.mention, embed=embed)
+                        embed.set_footer(text="Du kannst die Pings des Bots unter /settings deaktivieren.")
+                        if await db.get_setting(member.id, "ping") != 0:
+                            await vc.send(member.mention, embed=embed)
+                        else:
+                            await vc.send(embed=embed, silent=True)
 
                     await asyncio.sleep(0)
 
     # --- COMMANDS ---
     @slash_command()
     async def rank(self, ctx, user: Option(discord.Member, required=False)):  # type: ignore
+        log.info(f"{ctx.author} used /rank")
         if not user:
             user = ctx.author
         if user.bot:
@@ -223,6 +228,7 @@ class Level(commands.Cog):
 
     @slash_command()
     async def leaderboard(self, ctx, categorie: Option(str, choices=LEADERBOARD_CATEGORIES)):  # type: ignore
+        log.info(f"{ctx.author} used /leaderboard")
         await ctx.defer()
 
         guild_member_ids = {m.id for m in ctx.guild.members}
