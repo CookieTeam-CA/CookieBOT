@@ -159,7 +159,9 @@ class Level(commands.Cog):
                             f"erreicht! Du bekommst **{lvlcookies}** Cookies als Geschenk!",
                         )
                         embed.set_thumbnail(url=member.display_avatar.url)
-                        embed.set_footer(text="Du kannst die Pings des Bots unter /settings deaktivieren.")
+                        if random.randint(0, 2) == 0:
+                            embed.set_footer(text="Du kannst die Pings des Bots unter /settings deaktivieren.")
+                            
                         if await db.get_setting(member.id, "ping") != 0:
                             await vc.send(member.mention, embed=embed)
                         else:

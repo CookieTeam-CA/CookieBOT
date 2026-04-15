@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Discord Bot for the CookieClan Discord Server"
 requires-python = ">=3.13"
 dependencies = [
+    "aiohttp==3.13.5",
     "ezcord>=0.7.4",
     "py-cord>=2.7.1",
     "simpleeval>=1.0.3",

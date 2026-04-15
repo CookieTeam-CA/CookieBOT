@@ -153,7 +153,7 @@ def build_control_panel(
         ),
     )
 
-    footer = discord.ui.TextDisplay(content="-# Nur der Talk Owner kann einstellungen verändern.")
+    footer = discord.ui.TextDisplay(content="-# Nur der Talk Owner kann Einstellungen verändern.")
 
     return [
         discord.ui.Container(

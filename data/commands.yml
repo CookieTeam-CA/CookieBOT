@@ -64,6 +64,9 @@ en-US:
   settings:
     name: settings
     description: Enable oder disable features for you personaly.
+  daily:
+    name: daily
+    description: Get your daily reward!
 
   cogs:
     OneWordChallenge:
@@ -139,6 +142,9 @@ de:
   settings:
     name: einstellungen
     description: Schalte Features für dich persönlich an oder aus.
+  daily:
+    name: daily
+    description: Hole deine tägliche Belohung ab!
 
   cogs:
     OneWordChallenge:
