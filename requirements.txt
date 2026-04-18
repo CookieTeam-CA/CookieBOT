@@ -35,7 +35,7 @@ propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-py-cord==2.7.1
+py-cord==2.7.2
     # via cookiebot (pyproject.toml)
 python-dotenv==1.2.2
     # via ezcord
