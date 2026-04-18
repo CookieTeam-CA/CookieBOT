@@ -19,8 +19,6 @@ class Economy(commands.Cog):
 
     @slash_command()
     async def daily(self, ctx):
-        log.info(f"{ctx.author} used /daily")
-
         streak_data = await db.get_one_row("daily", "user_id", ctx.author.id)
         streak = streak_data[1] if streak_data else 0
         base = random.randint(20, 35)
@@ -83,8 +81,6 @@ class Economy(commands.Cog):
     @slash_command()
     @commands.cooldown(2, 120)
     async def gift(self, ctx, user: discord.Member, cookies: int):
-        log.info(f"{ctx.author} used /gift")
-
         if user.bot:
             return await ctx.respond("Du kannst einem Bot keine Cookies schenken :(", ephemeral=True)
 

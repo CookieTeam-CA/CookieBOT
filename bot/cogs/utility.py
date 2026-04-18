@@ -58,8 +58,6 @@ class Utility(commands.Cog):
 
     @slash_command()
     async def avatar(self, ctx, user: Option(discord.Member, required=False)):  # type: ignore
-        log.info(f"{ctx.author} used /avatar")
-
         if not user:
             user = ctx.author
 
@@ -112,7 +110,6 @@ class Utility(commands.Cog):
             default="default",
         ),
     ):
-        log.info(f"{ctx.author} used /mc_skin")
         await ctx.defer()
 
         if username != urllib.parse.quote(username):
@@ -133,7 +130,6 @@ class Utility(commands.Cog):
 
     @slash_command()
     async def settings(self, ctx):  # type: ignore
-        log.info(f"{ctx.author} used /settings")
         embed = discord.Embed(
             title="Einstellungen",
             description="Hier kannst eigene Einstellungen im bezug zum Bot treffen.",

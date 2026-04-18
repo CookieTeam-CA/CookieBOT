@@ -67,6 +67,16 @@ en-US:
   daily:
     name: daily
     description: Get your daily reward!
+  coinflip:
+    name: coinflip
+    description: Throw a coin and put cookies on the result. If you guess correctly, you get more cookies. Otherwise, you lose everything.
+    options:
+      coin:
+        name: coin
+        description: On which result would you like to set?
+      cookies:
+        name: bet
+        description: How many cookies would you like to set?
 
   cogs:
     OneWordChallenge:
@@ -145,6 +155,16 @@ de:
   daily:
     name: daily
     description: Hole deine tägliche Belohung ab!
+  coinflip:
+    name: coinflip
+    description: Wirf eine Münze und setze Cookies auf das Ergebnis. Wenn du richtig liegst, bekommst du mehr Cookies. Wenn nicht, verlierst du alles.
+    options:
+      coin:
+        name: münze
+        description: Auf welchen Ergebnis möchtest du setzten?
+      cookies:
+        name: wette
+        description: Wie viele Cookies möchtest du setzen?
 
   cogs:
     OneWordChallenge:

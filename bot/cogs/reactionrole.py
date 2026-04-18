@@ -26,7 +26,6 @@ class ReactionRole(commands.Cog):
     @slash_command()
     @commands.has_permissions(administrator=True)
     async def add_reactionrole(self, ctx, message_id: str, emoji: str, role: Role):
-        log.info(f"{ctx.author} used /add_reactionrole")
         try:
             msg_id = int(message_id)
         except ValueError:
@@ -53,7 +52,6 @@ class ReactionRole(commands.Cog):
     @slash_command()
     @commands.has_permissions(administrator=True)
     async def remove_reactionrole(self, ctx, message_id: str, emoji: str):
-        log.info(f"{ctx.author} used /remove_reactionrole")
         try:
             msg_id = int(message_id)
         except ValueError:
@@ -74,7 +72,6 @@ class ReactionRole(commands.Cog):
     @slash_command()
     @commands.has_permissions(administrator=True)
     async def list_reactionroles(self, ctx):
-        log.info(f"{ctx.author} used /list_reactionroles")
         data = await db.get_reactionroles()
 
         if not data:

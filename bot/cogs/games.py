@@ -15,7 +15,7 @@ class Games(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        log.info("one_word.py is ready")
+        log.info("games.py is ready")
 
     @slash_command()
     async def coinflip(self, ctx, coin: Option(str, required=True, choices=["Kopf", "Zahl"]), cookies: int):  # type: ignore
@@ -24,9 +24,7 @@ class Games(commands.Cog):
 
         bank = await db.get_cookies(ctx.author.id)
         if bank < cookies:
-            return await ctx.respond(
-                f"Du hast nicht genügend Cookies. (Guthaben: **{bank}** Cookies)", ephemeral=True
-            )
+            return await ctx.respond(f"Du hast nicht genügend Cookies. (Guthaben: **{bank}** Cookies)", ephemeral=True)
 
         msg = await ctx.respond("🪙 Die Münze wird geworfen...")
         result = random.choice(["Kopf", "Zahl"])

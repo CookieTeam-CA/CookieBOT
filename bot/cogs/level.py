@@ -172,7 +172,6 @@ class Level(commands.Cog):
     # --- COMMANDS ---
     @slash_command()
     async def rank(self, ctx, user: Option(discord.Member, required=False)):  # type: ignore
-        log.info(f"{ctx.author} used /rank")
         if not user:
             user = ctx.author
         if user.bot:
@@ -231,7 +230,6 @@ class Level(commands.Cog):
 
     @slash_command()
     async def leaderboard(self, ctx, categorie: Option(str, choices=LEADERBOARD_CATEGORIES)):  # type: ignore
-        log.info(f"{ctx.author} used /leaderboard")
         await ctx.defer()
 
         guild_member_ids = {m.id for m in ctx.guild.members}
