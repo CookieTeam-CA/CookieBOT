@@ -161,7 +161,7 @@ class Level(commands.Cog):
                         embed.set_thumbnail(url=member.display_avatar.url)
                         if random.randint(0, 2) == 0:
                             embed.set_footer(text="Du kannst die Pings des Bots unter /settings deaktivieren.")
-                            
+
                         if await db.get_setting(member.id, "ping") != 0:
                             await vc.send(member.mention, embed=embed)
                         else:
@@ -226,6 +226,7 @@ class Level(commands.Cog):
         discord.OptionChoice("🔢 Guess the Number", "gtn"),
         discord.OptionChoice("🏳️ Flaggenerraten", "flags"),
         discord.OptionChoice("🔢 Counting", "counting"),
+        discord.OptionChoice("🪙 Coinflip", "coinflip"),
     ]
 
     @slash_command()
@@ -330,6 +331,28 @@ class Level(commands.Cog):
                     )
 
             pages = build_pages(rows, title="🔢 Counting Leaderboard", builder=builder, chunk_size=10)
+
+        elif categorie == "coinflip":
+            rows = await get_filtered("coinflip", "cookies_won - cookies_loss")
+
+            def builder(i, chunk, embed):
+                for rank, row in enumerate(chunk, start=i * 10 + 1):
+                    member = ctx.guild.get_member(row[0])
+                    name = member.display_name if member else f"<@{row[0]}>"
+
+                    total_flips = row[1] + row[2]
+                    total_wins = row[3] + row[4]
+                    winrate = round(total_wins / total_flips * 100) if total_flips > 0 else 0
+                    net = row[8] - row[7]
+                    net_str = f"+{net}" if net >= 0 else str(net)
+
+                    embed.add_field(
+                        name=f"#{rank} {name}",
+                        value=(f"**{winrate}%** Winrate • Beste Streak **{row[6]}** • Profit **{net_str}** Cookies"),
+                        inline=False,
+                    )
+
+            pages = build_pages(rows, title="🪙 Coinflip Leaderboard", builder=builder, chunk_size=10)
 
         if not pages:
             await ctx.respond("Noch keine Daten vorhanden!", ephemeral=True)

@@ -115,6 +115,41 @@ class UserDB(ezcord.DBHandler):
         user_id INTEGER PRIMARY KEY,
         dm INTEGER DEFAULT 1,
         ping INTEGER DEFAULT 1)""")  # 1 = ping bzw dm senden
+        # Coinflip
+        await self.exec("""
+        CREATE TABLE IF NOT EXISTS coinflip (
+        user_id INTEGER PRIMARY KEY,
+        heads INTEGER DEFAULT 0,
+        tails INTEGER DEFAULT 0,
+        heads_wins INTEGER DEFAULT 0,
+        tails_wins INTEGER DEFAULT 0,
+        current_streak INTEGER DEFAULT 0,
+        best_streak INTEGER DEFAULT 0,
+        cookies_loss INTEGER DEFAULT 0,
+        cookies_won INTEGER DEFAULT 0)""")  # loses = heads + tails - head_wins - tails_wins
+
+    ### --- COINFLIP ---
+    async def coinflip_win(self, user_id, choice: Literal["heads", "tails"], cookies_bet: int):
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO coinflip (user_id) VALUES (?)", (user_id,))
+            await cursor.exec(
+                f"UPDATE coinflip SET {choice} = {choice} + 1, {choice}_wins = {choice}_wins + 1, "
+                "current_streak = current_streak + 1, cookies_won = cookies_won + ?, best_streak = MAX(best_streak, "
+                "current_streak + 1) WHERE user_id = ?",
+                (cookies_bet, user_id),
+            )
+
+    async def coinflip_loss(self, user_id, choice: Literal["heads", "tails"], cookies_bet: int):
+        async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO coinflip (user_id) VALUES (?)", (user_id,))
+            await cursor.exec(
+                f"UPDATE coinflip SET {choice} = {choice} + 1, current_streak = 0, cookies_loss = cookies_loss + ? "
+                "WHERE user_id = ?",
+                (cookies_bet, user_id),
+            )
+
+    async def get_coinflip_stats(self, user_id):
+        return await self.one("SELECT * FROM coinflip WHERE user_id = ?", (user_id,))
 
     ### --- SETTINGS ---
     async def change_setting(self, user_id, setting, to):  # 0 nicht geändert da schon so ist, 1 = erfolgreich geändert
@@ -169,12 +204,17 @@ class UserDB(ezcord.DBHandler):
 
     async def remove_cookies(self, user_id, cookies):
         async with self.start() as cursor:
+            await cursor.exec("INSERT OR IGNORE INTO economy (user_id) VALUES (?)", (user_id,))
             result = await cursor.exec(
                 "UPDATE economy SET cookies = cookies - ? WHERE user_id = ? AND cookies >= ?",
                 (cookies, user_id, cookies),
             )
 
             return result.rowcount  # 1 = erfolgreich, 0 = nicht genug cookies
+
+    async def get_cookies(self, user_id):
+        res = await self.one("SELECT cookies FROM economy WHERE user_id = ?", (user_id,))
+        return res if res else 0
 
     ### --- LEVELS ---
     async def add_voice_time(self, user_id, minutes, xp):

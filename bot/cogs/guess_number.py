@@ -120,7 +120,7 @@ class GuessNumber(commands.Cog):
             if chance == 1:
                 if self.number is None or self.number1 is None or self.number2 is None:
                     return
-                
+
                 if self.number1 <= guess <= self.number2:
                     if guess > self.number:
                         await message.reply("Die gesuchte Zahl ist kleiner.", mention_author=False)

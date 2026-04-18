@@ -23,6 +23,7 @@ if __name__ == "__main__":
     bot.load_extension("bot.cogs.reactionrole")
     bot.load_extension("bot.cogs.level")
     bot.load_extension("bot.cogs.economy")
+    bot.load_extension("bot.cogs.games")
 
     bot.localize_commands(cmd_locales)
     bot.run(os.getenv("TOKEN"))
