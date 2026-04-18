@@ -9,7 +9,7 @@ from ezcord.internal.dc import slash_command
 from bot.db.handler import db
 
 
-class OneWordChallenge(commands.Cog):
+class Games(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -73,4 +73,4 @@ class OneWordChallenge(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(OneWordChallenge(bot))
+    bot.add_cog(Games(bot))
