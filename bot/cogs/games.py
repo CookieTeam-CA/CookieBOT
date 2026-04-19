@@ -19,7 +19,7 @@ class Games(commands.Cog):
 
     @slash_command()
     async def coinflip(self, ctx, coin: Option(str, required=True, choices=["Kopf", "Zahl"]), cookies: int):  # type: ignore
-        if cookies <= 0:
+        if int(cookies) <= 0:
             return await ctx.respond("Du musst mindestens 1 Cookie setzen.", ephemeral=True)
 
         bank = await db.get_cookies(ctx.author.id)

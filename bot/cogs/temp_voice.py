@@ -200,7 +200,8 @@ class TempVoice(commands.Cog):
             if owner_id and member.id == owner_id:
                 new_owner = random.choice(remaining)
                 await self._transfer_ownership(channel, member, new_owner)
-                await channel.send(f"{new_owner.mention} hat nun die Owner Rechte.")
+                with suppress(discord.NotFound):
+                    await channel.send(f"{new_owner.mention} hat nun die Owner Rechte.")
             else:
                 await self._edit_panel(channel)
 
