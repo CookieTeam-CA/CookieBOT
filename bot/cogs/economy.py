@@ -19,8 +19,8 @@ class Economy(commands.Cog):
 
     @slash_command()
     async def daily(self, ctx):
-        await ctx.defer(ephemeral=True)
-        
+        await ctx.defer()
+
         streak_data = await db.get_one_row("daily", "user_id", ctx.author.id)
         streak = streak_data[1] if streak_data else 0
         base = random.randint(20, 35)
@@ -45,7 +45,7 @@ class Economy(commands.Cog):
             )
             embed.set_footer(text=f"🔥 Streak: {streak} Tage  •  📦 Gesamt: {claims}x abgeholt")
             embed.set_thumbnail(url=ctx.author.display_avatar.url)
-            return await ctx.respond(embed=embed, ephemeral=True)
+            return await ctx.respond(embed=embed)
 
         elif typ == 1:  # Daily abgeholt, Streak verlängert.
             embed = discord.Embed(
@@ -56,12 +56,6 @@ class Economy(commands.Cog):
                 ),
                 color=discord.Color.orange(),
             )
-            embed.add_field(name="🍪 Cookies erhalten", value=f"`{cookies}`", inline=True)
-            embed.add_field(name="🔥 Streak", value=f"`{streak} Tage`", inline=True)
-            embed.add_field(name="📦 Gesamt abgeholt", value=f"`{claims}x`", inline=True)
-            embed.set_footer(text="Komm morgen wieder, um deinen Streak zu verlängern!")
-            embed.set_thumbnail(url=ctx.author.display_avatar.url)
-            return await ctx.respond(embed=embed)
 
         else:  # Daily abgeholt, Streak unterbrochen.
             embed = discord.Embed(
@@ -73,16 +67,16 @@ class Economy(commands.Cog):
                 ),
                 color=discord.Color.red(),
             )
-            embed.add_field(name="🍪 Cookies erhalten", value=f"`{cookies}`", inline=True)
-            embed.add_field(name="🔥 Streak", value="`1 Tag`", inline=True)
-            embed.add_field(name="📦 Gesamt abgeholt", value=f"`{claims}x`", inline=True)
-            embed.set_footer(text="Komm morgen wieder, um deinen Streak aufzubauen!")
-            embed.set_thumbnail(url=ctx.author.display_avatar.url)
-            return await ctx.respond(embed=embed)
+        embed.add_field(name="🍪 Cookies erhalten", value=f"`{cookies}`", inline=True)
+        embed.add_field(name="🔥 Streak", value="`1 Tag`", inline=True)
+        embed.add_field(name="📦 Gesamt abgeholt", value=f"`{claims}x`", inline=True)
+        embed.set_footer(text="Komm morgen wieder, um deinen Streak aufzubauen!")
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
+        return await ctx.respond(embed=embed)
 
     @slash_command()
     @commands.cooldown(2, 120)
-    async def gift(self, ctx, user: discord.Member, cookies: int):
+    async def gift(self, ctx, user: discord.Member, cookies: int, message: discord.Option(str, required=False)):  # ty:ignore[invalid-type-form]
         if user.bot:
             return await ctx.respond("Du kannst einem Bot keine Cookies schenken :(", ephemeral=True)
 
@@ -96,10 +90,16 @@ class Economy(commands.Cog):
             description=f"Du hast {user.mention} erfolgreich **{cookies} Cookies** geschenkt!",
             color=discord.Color.green(),
         )
+        if message:
+            embed.add_field(name="Nachricht", value=f"```{message}```")
         await ctx.respond(embed=embed)
         try:
             if await db.get_setting(user.id, "dm") != 0:
-                await user.send(f"Du hast von {ctx.author.mention} **{cookies} Cookies** erhalten.", silent=True)
+                if message:
+                    message = f"Mit der Nachricht: `{message}`"
+                await user.send(
+                    f"Du hast von {ctx.author.mention} **{cookies} Cookies** erhalten. " + message, silent=True
+                )
         except Exception:
             return None
 

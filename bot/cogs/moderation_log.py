@@ -37,6 +37,9 @@ class ModerationLog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
+        if message.author.bot:
+            return
+
         embed = Embed(
             description=f"{message.author.mention} deleted a message in {message.channel.jump_url}",
             color=Color.red(),

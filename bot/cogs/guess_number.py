@@ -1,3 +1,4 @@
+import math
 import random
 import time
 from datetime import datetime
@@ -11,6 +12,11 @@ from bot.db.handler import db
 from bot.utils.helpers import load_config, safe_delete, safe_embed_channel_send, safe_pin, safe_unpin
 
 
+def calc_cookies(number1: int, number2: int) -> int:
+    span = number2 - number1
+    return max(5, round(math.sqrt(span) * 1.5))
+
+
 class GuessNumber(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -20,8 +26,8 @@ class GuessNumber(commands.Cog):
 
         self.id = None
         self.number = None
-        self.number1 = None
-        self.number2 = None
+        self.number1 = 0
+        self.number2 = 1
         self.last_game_message = None
         self.race_condition = None
 
@@ -97,10 +103,13 @@ class GuessNumber(commands.Cog):
             wins = result[1]
             guesses = result[2]
             winrate = round((wins / guesses) * 100 if guesses > 0 else 0)
+            cookies = calc_cookies(int(self.number1), int(self.number2))
+            await db.add_cookies(message.author.id, cookies)
 
             embed = discord.Embed(
                 title="RICHTIG!",
-                description=f"{message.author.mention} hat die Zahl **{self.number}** erraten.",
+                description=f"{message.author.mention} hat die Zahl **{self.number}** erraten und dafür **{cookies}** "
+                "Cookies bekommen!",
                 color=discord.Color.green(),
             )
             embed.set_footer(text=f"Du hast eine Gewinnchance von {round(winrate, 2)}%.")
@@ -113,7 +122,6 @@ class GuessNumber(commands.Cog):
             await message.add_reaction("✅")
             await self.new_game()
             log.info(f"{message.author} wrote the correct number {self.number}")
-            # jetzt noch kekse geben
         else:
             await message.add_reaction("❌")
             chance = random.randint(1, 5)

@@ -9,6 +9,20 @@ from ezcord import log
 from bot.db.handler import db
 from bot.utils.helpers import load_config, safe_embed_channel_send
 
+STREAK_BONUSES = [
+    (15, 6),
+    (10, 4),
+    (5, 2),
+    (0, 0),
+]
+
+
+def get_streak_bonus(streak: int) -> int:
+    for threshold, bonus in STREAK_BONUSES:
+        if streak >= threshold:
+            return bonus
+    return 0
+
 
 class SkipButton(discord.ui.View):
     def __init__(self, cog):
@@ -263,9 +277,15 @@ class FlagGuessingCog(commands.Cog):
             if message.content.lower() in [name.lower() for name in self.flag_dict[self.current_flag]]:
                 await db.update_flag_stats(message.author.id, True)
                 result = await db.get_one_row("flag_stats", "user_id", message.author.id)
+
+                streak_add = get_streak_bonus(result[3])
+                cookies = random.randint(2, 4) + streak_add
+                await db.add_cookies(message.author.id, cookies)
+
                 embed = discord.Embed(
                     title="Richtig!",
-                    description=f"**{message.author.mention}** hat die Flagge **{message.content}** richtig erraten.",
+                    description=f"**{message.author.mention}** hat die Flagge **{message.content}** richtig erraten "
+                    f"und dafür **{cookies} Cookies** bekommen!",
                     color=discord.Color.green(),
                 )
 
