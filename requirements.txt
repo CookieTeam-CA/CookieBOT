@@ -45,7 +45,7 @@ simpleeval==1.0.7
     # via cookiebot (pyproject.toml)
 typing-extensions==4.15.0
     # via py-cord
-tzdata==2026.1
+tzdata==2026.2
     # via cookiebot (pyproject.toml)
 yarl==1.23.0
     # via aiohttp
