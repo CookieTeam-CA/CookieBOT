@@ -129,7 +129,7 @@ class Utility(commands.Cog):
         await ctx.respond(embed=embed, view=view)
 
     @slash_command()
-    async def settings(self, ctx):  # type: ignore
+    async def settings(self, ctx):
         embed = discord.Embed(
             title="Einstellungen",
             description="Hier kannst eigene Einstellungen im bezug zum Bot treffen.",

@@ -60,11 +60,8 @@ class CountingCog(commands.Cog):
             if result == self.count + 1:
                 self.count += 1
                 self.previous_author_id = message.author.id
-                await db.update_counting(self.count, message.author.id)
+                await db.update_counting(self.count, message.author.id, message.id)
                 await message.add_reaction("✅")
-
-                if self.count == 67:
-                    await message.add_reaction("🔫")
             else:
                 embed = discord.Embed(
                     title="Verkackt!",
@@ -78,11 +75,23 @@ class CountingCog(commands.Cog):
 
         self.count = 0
         self.previous_author_id = None
-        await db.update_counting(0, message.author.id, fail=1)
+        await db.update_counting(0, message.author.id, message.id, fail=1)
 
         await message.add_reaction("❌")
         await message.channel.send(embed=embed)
         await message.channel.send(f"**0** | Highscore: {highscore[1]}")
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        if not self.channel_id or message.channel.id != self.channel_id or message.author.bot:
+            return
+
+        state = await db.get_counting_state()
+        if state[2] != message.id:
+            return
+
+        embed = discord.Embed(title=state[0], description=f"{message.author.mention} hat seine Nachricht gelöscht.")
+        await message.channel.send(embed=embed)
 
 
 def setup(bot):

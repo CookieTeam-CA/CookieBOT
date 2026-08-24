@@ -10,6 +10,7 @@ import ezcord
 from ezcord import log
 
 from bot.db.handler import db
+from bot.db.migration import db as mdb
 from bot.utils.helpers import greeter_builder, safe_add_role, safe_embed_channel_send
 
 os.makedirs("logs", exist_ok=True)
@@ -64,6 +65,7 @@ class MyBot(ezcord.Bot):
             sys.exit(1)
 
     async def on_ready(self):
+        await mdb.migrate()
         await db.setup()
         print("System is up and running.")
 
