@@ -28,8 +28,7 @@ class UserDB(ezcord.DBHandler):
             version = 0
 
         else:
-            row = await self.one("SELECT version FROM schema_version LIMIT 1")
-            version = row[0] if row else 0
+            version = await self.one("SELECT version FROM schema_version LIMIT 1")
 
         if version < 1:
             await self.exec("ALTER TABLE counting ADD COLUMN last_message_id INTEGER")
